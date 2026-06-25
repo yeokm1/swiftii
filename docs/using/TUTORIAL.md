@@ -314,7 +314,7 @@ lowercase ASCII. The //e shows real lowercase.
 The same file in the editor on a ][+ (40-column, uppercase) and a //e
 (40-column with real lowercase):
 
-![The editor on a ][+, 40-column uppercase](../screenshots/editor-iip.png)
+![The editor on a II+, 40-column uppercase](../screenshots/editor-iip.png)
 ![The editor on a //e, 40-column with lowercase](../screenshots/editor-iie.png)
 
 On a //e, **Ctrl-W** switches the editor to 80 columns:
