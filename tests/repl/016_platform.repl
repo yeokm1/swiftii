@@ -1,0 +1,8 @@
+poke(49200, 0)
+print(peek(49200))
+let p = peek(1024)
+print(p)
+vtab(2)
+htab(3)
+peek(49200)
+:quit

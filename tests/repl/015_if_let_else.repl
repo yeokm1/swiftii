@@ -1,0 +1,8 @@
+let a: Int? = 5
+if let v = a { print("some \(v)") } else { print("none") }
+let b: Int? = nil
+if let v = b { print("some \(v)") } else { print("none") }
+func describe(_ x: Int?) -> String { if let n = x { return "got \(n)" } else { return "nada" } }
+print(describe(9))
+print(describe(nil))
+:quit

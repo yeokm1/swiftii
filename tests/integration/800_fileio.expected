@@ -1,0 +1,5 @@
+fileio integration
+read len = 5
+append len = 11
+list: inner.txt
+RESULT: PASS

@@ -1,0 +1,11 @@
+1
+nil
+redef foo
+2
+nil
+compile error: missing return
+2
+nil
+redef g
+5
+nil

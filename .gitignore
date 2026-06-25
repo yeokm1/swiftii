@@ -1,0 +1,87 @@
+# Build output
+build/
+
+# Demo video capture output (frames + encoded MP4s)
+demo/capture/out/
+
+# OS metadata
+.DS_Store
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Disk images (built artifacts)
+*.po
+# ...but DO track the published, version-tagged release images
+# (make release copies them into releases/v<version>/).
+!releases/**/*.po
+
+# Emulator binaries dropped in the repo (e.g. the downloaded izapple2sdl)
+izapple2sdl*
+
+# Apple II binary blobs
+*.system
+*.sys
+SWIFTII.SYSTEM
+
+# External tool stash (downloaded by setup.sh).
+# prodos243/ProDOS_2_4_3.po is already covered by the global *.po rule above.
+tools/host/AppleCommander*.jar
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+*.lbl
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# debug information files
+*.dwo

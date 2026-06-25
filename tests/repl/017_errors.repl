@@ -1,0 +1,16 @@
+print(zz)
+let q =
+print(1
+func
+var w: Int = "hi"
+min(a: 1, b: 2)
+if 1 < 2 print(1)
+let s = "ok"
+print(s.bad)
+func g() -> Int { }
+print(1 / 0)
+var arr = [1]
+print(arr[9])
+let opt: Int? = nil
+print(opt!)
+print(42)

@@ -1,0 +1,10 @@
+func foo() { print(1) }
+foo()
+func foo() { print(2) }
+foo()
+func foo() -> Int { print(8) }
+foo()
+func g() { print(10) }
+func g(x: Int) { print(x) }
+g(5)
+:quit

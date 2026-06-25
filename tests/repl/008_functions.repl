@@ -1,0 +1,6 @@
+func sq(_ x: Int) -> Int { return x * x }
+sq(7)
+func add(a: Int, b: Int) -> Int { return a + b }
+add(a: 3, b: 4)
+sq(add(a: 2, b: 3))
+:quit

@@ -1,0 +1,5 @@
+var t_x = 0
+for i in 1...3 { t_x = t_x + i }
+print("total = \(t_x)")
+print("hi\nthere")
+:quit

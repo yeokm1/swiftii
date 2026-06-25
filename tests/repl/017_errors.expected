@@ -1,0 +1,13 @@
+compile error: undeclared name
+compile error: expected expression
+compile error: expected ')'
+compile error: expected name
+compile error: type mismatch
+compile error: use positional args, not labels
+compile error: expected '{'
+compile error: unknown member
+compile error: missing return
+runtime error
+runtime error
+runtime error
+42

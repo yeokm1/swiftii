@@ -1,0 +1,3 @@
+random(in: 1...6)
+readFile("X")
+:quit

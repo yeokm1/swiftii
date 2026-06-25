@@ -1,0 +1,13 @@
+let x: Int = "hi"
+let y: Int? = 5
+let z: Int = y
+let m: Int? = nil
+let arr: [Int] = [1, 2, 3]
+let bad: [Int] = ["nope"]
+var n: Int = 1
+n = "string"
+print(y)
+print(m)
+print(arr)
+print(n)
+:quit

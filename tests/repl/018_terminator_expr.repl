@@ -1,0 +1,4 @@
+let sep = " | "
+print(1, terminator: sep); print(2)
+:quit
+

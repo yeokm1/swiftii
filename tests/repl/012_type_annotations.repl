@@ -1,0 +1,11 @@
+var a: Int = 5
+var b: Int? = 7
+var c: String? = nil
+var d: [Int] = [1, 2, 3]
+var e: [String] = ["hi"]
+print(a)
+print(b)
+print(c)
+print(d)
+print(e)
+:quit

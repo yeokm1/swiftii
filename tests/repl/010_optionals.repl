@@ -1,0 +1,6 @@
+let a: Int? = 5
+a!
+let b: Int? = nil
+b ?? 99
+if let v = a { print(v + 1) }
+:quit

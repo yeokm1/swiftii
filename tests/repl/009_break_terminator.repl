@@ -1,0 +1,3 @@
+var i = 0; while true { i = i + 1; if i > 3 { break }; print(i) }
+print("x = ", terminator: ""); print(42)
+:quit

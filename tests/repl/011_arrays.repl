@@ -1,0 +1,12 @@
+var a = [1, 2, 3]
+a.append(4)
+a[1]
+a.count
+a.isEmpty
+a[0] = 99
+a[0]
+a.contains(99)
+a.contains(7)
+a.removeLast()
+a.count
+:quit

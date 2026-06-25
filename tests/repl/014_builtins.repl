@@ -1,0 +1,10 @@
+min(3, 8)
+max(3, 8)
+min(-4, 5)
+print(String(42))
+print("n=" + String(-7))
+print(asc("A"))
+print(asc("hello"))
+print(chr(66))
+print(chr(asc("A")))
+:quit
