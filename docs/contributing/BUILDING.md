@@ -138,8 +138,9 @@ Pick one. SwiftII's `make run` defaults to Mariani; change
 - **izapple2** - CLI-configured profiles (Saturn 128K, //e), with embedded
   ROMs and no GUI to set up. See section 6a.
 
-> A bare-64K //e and a basic-80-col (1K) //e aren't modelled by either
-> supported emulator, so those configs are **real-hardware-only**.
+> izapple2's //e profiles are always 128K; use Mariani for the plain //e
+> 64K/no-aux smoke. A basic-80-col (1K) //e and RAMWorks-style large aux
+> configs are **real-hardware-only** for now.
 >
 > An II+ 80-column path via the **Videx Videoterm** (slot 3) is
 > **REPL/program only**: the REPL path is `SWIFTSAT`, so it requires Saturn
@@ -189,17 +190,17 @@ For Mariani the data-disk variants mirror the izapple2 `-2disk` suffix:
 `make run-mari-iip-2disk` / `run-mari-sat-2disk` / `run-mari-iie-2disk` /
 `run-mari-aux-2disk` (one per program disk; set the matching model in Mariani's
 GUI). Compiler-runner disks have the same scheme:
-`run-mari-compiler[-iie|-sat]` and their `-2disk` data-disk variants.
+`run-mari-compiler[-iie|-iie-aux|-sat]` and their `-2disk` data-disk variants.
 
-izapple2 **runs SWIFTSAT** on its Saturn (input + output confirmed). (One
-known cosmetic issue: keyboard echo is invisible while typing on SWIFTSAT under
-izapple2 - input still captured; see `docs/testing/TESTING.md`.)
+izapple2 **runs SWIFTSAT** on its Saturn (input + output confirmed, including
+40-column keyboard echo).
 izapple2's //e (`2e`/`2enh`) is always 128K; `run-iz-iie` boots the //e lite
-disk (SWIFTIIE) and `run-iz-iienh` the //e aux disk (SWIFTAUX) - bare-64K /
-basic-80-col //e need real hardware. Plus the edge cases
-`run-iz-iip48` (48K, no boot), `run-iz-sat-s4` (Saturn in slot 4),
-`run-iz-memexp` (a RAM card must not false-trigger extras). Override the
-binary with `IZAPPLE2=…`; mapping lives in `emulator/run_izapple2.sh`.
+disk (SWIFTIIE) and `run-iz-iienh` the //e aux disk (SWIFTAUX); Mariani covers
+the plain //e 64K/no-aux row. Plus the edge cases `run-iz-ii` (original Apple
+][ with a 16K language card), `run-iz-iip48` (48K, no boot), `run-iz-sat-s4`
+(Saturn in slot 4), and `run-iz-memexp` (a RAM card must not false-trigger
+extras). Override the binary with `IZAPPLE2=…`; mapping lives in
+`emulator/run_izapple2.sh`.
 
 #### 6b. The automated acceptance harness (izapple2 `headless`)
 
@@ -270,8 +271,8 @@ make apple2-iie             # cross-compile //e lite interpreter (SWIFTIIE)
 make apple2-swiftsat        # cross-compile Saturn 128K extras (SWIFTSAT)
 make apple2-swiftaux        # cross-compile //e-aux extras (SWIFTAUX)
 make apple2-all             # all four interpreter binaries
-make apple2-compiler        # Family B Compilers: II+ Tier-1 + //e Tier-3 (aux-paged)
-make apple2-runner          # Family B Runners:   II+ + //e RUNNER.SYSTEM
+make apple2-compiler        # Family B Compilers: II+ + //e flat + //e aux-paged
+make apple2-runner          # Family B Runners:   II+ + //e flat + //e aux-paged
 make apple2-saturn-familyb  # II+ Tier-2 (Saturn-paged) Compiler + Runner
 make apple2-familyb         # all three tiers' Compilers + Runners
 make disks                  # build all 9 disks (the five Family A + four Family B)
@@ -362,20 +363,21 @@ live under `datadisk/xsamples/`. What ships where:
   samples (`xsamples/`). **Not** the Family-B-only ones - they'd reject on a REPL.
 - **Family B compiler disks**: a **minimal inline set** (greet + functions +
   xsnake) so the Compiler keeps free blocks to write `.swb` output (a full disk
-  surfaces as `write error err=$48 disk full`); the images keep ~2–6 KB free
-  (II+ ~4 KB, //e ~5.6 KB, the Saturn tier tightest at ~2 KB).
+  surfaces as `write error err=$48 disk full`); current free space is listed in
+  [`releases/README.md`](../../releases/README.md) and ranges from the tight
+  Saturn compiler disk to the roomier //e flat disk.
 - **Data disk** (drive 2): the canonical FULL set. Its build assembles `SAMPLES/`
   + `XSAMPLES/` from **all** the trees (program-disk samples - including the
   Family-B-only `fbsamples/` - are referenced from `progdisk/`, not copied into
   `datadisk/`) **plus** the data-disk-only oversize showcases that exceed the
   2 KB Family-A staging cap and so ship nowhere else, each landing on a
   different point of the [tier tradeoffs](design/020-tier2-saturn-paged-runner.md):
-  - `xbig.swift` (9.1 KB number tour) wraps each section in a function so its
+  - `xbig.swift` (~7.8 KB number tour) wraps each section in a function so its
     bytecode flushes to the paged store and its arrays/strings free on return —
     so it compiles and runs on **all three tiers** (runtime peak ~1.7 KB, within
     the Saturn Runner's 1,792 B heap). Terse labels keep its const pool under the
     paged compile heap; the checksum is purely numeric, so they don't change it.
-  - `xgrdemo.swift` (7 KB graphics) wraps each scene in a function, so its
+  - `xgrdemo.swift` (~8.7 KB graphics) wraps each scene in a function, so its
     bytecode flushes to the bank — it compiles and runs on **all three tiers**.
   - `xfuncs.swift` is **function-heavy** — it only fits the **Tier-2/3** paged
     compilers (its total bytecode exceeds the flat buffer).

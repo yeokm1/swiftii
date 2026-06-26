@@ -120,10 +120,12 @@ stay in each mode while you're in it - REPL work together, then back to the
 launcher for the file selector → editor → Debug → samples - so you change
 UI mode the fewest times.
 
-### Pass 1 - izapple2 (the full pass; superset of Mariani)
+### Pass 1 - izapple2 (broad disk pass)
 
 izapple2 is the only emulator that can do Videx 80-col (E3), the original
-`][` boot, and `bigswb-iie` - so this pass covers **everything**.
+`][` boot, and `bigswb-iie`, and it covers every disk family. Its //e profiles
+are always 128K, so use the Mariani E4 repeat below for the plain 64K/no-aux
+//e hardware smoke.
 
 | # | Boot (izapple2 / +data) | Sections to clear in this boot |
 |---|--------------------------|--------------------------------|

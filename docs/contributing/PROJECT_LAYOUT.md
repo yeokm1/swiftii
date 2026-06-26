@@ -210,9 +210,10 @@ swiftii/
 │   │   │                        (cc65-built; shipped on the disks)
 │   │   ├── boot_launcher/     ← the ProDOS-auto-launched boot selector
 │   │   │   │                    (includes the in-process editor). One source,
-│   │   │   │                    three per-disk builds: build/boot_launcher/SWIFTII
-│   │   │   │                    (II+), iie/SWIFTII (-DLITE_IIE), sat/SWIFTII
-│   │   │   │                    (-DFAMILYB_SATURN, Saturn-compiler-disk banner).
+│   │   │   │                    four builds: build/boot_launcher/SWIFTII
+│   │   │   │                    (II+), iie/SWIFTII (-DLITE_IIE),
+│   │   │   │                    iie-aux/SWIFTII (-DFAMILYB_AUX), and
+│   │   │   │                    sat/SWIFTII (-DFAMILYB_SATURN).
 │   │   │   ├── boot_launcher.c
 │   │   │   ├── boot_launcher_asm.s
 │   │   │   └── boot_launcher.cfg
@@ -266,9 +267,14 @@ swiftii/
 │   │   ├── swiftaux/SWIFTAUX.SYSTEM ← //e aux extras
 │   │   │                        (no unified SWIFTIIX.SYSTEM; the two
 │   │   │                         split the extras role per machine)
-│   │   ├── compiler/COMPILER.SYSTEM ← Family B compiler
+│   │   ├── compiler/COMPILER.SYSTEM ← Family B compiler, II+ flat
+│   │   ├── compiler/iie/COMPILER.SYSTEM ← Family B compiler, //e flat
+│   │   ├── compiler/iie-aux/COMPILER.SYSTEM ← Family B compiler, //e aux-paged
+│   │   ├── compiler/sat/COMPILER.SYSTEM ← Family B compiler, Saturn-paged
 │   │   ├── runner/RUNNER.SYSTEM     ← Family B runner, II+ build
-│   │   ├── runner/iie/RUNNER.SYSTEM ← Family B runner, //e build
+│   │   ├── runner/iie/RUNNER.SYSTEM ← Family B runner, //e flat build
+│   │   ├── runner/iie-aux/RUNNER.SYSTEM ← Family B runner, //e aux-paged
+│   │   ├── runner/sat/RUNNER.SYSTEM ← Family B runner, Saturn-paged
 │   │   │                        (no HGR variants SWIFTIIH/SWIFTIIF -
 │   │   │                         ROADMAP Maybe item 1; the editor lives
 │   │   │                         in the boot launcher, no standalone

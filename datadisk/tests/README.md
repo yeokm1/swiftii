@@ -49,13 +49,15 @@ disk:
 ```
 # Mariani (machine is a GUI setting)
 make run-mari-iip-2disk        # II+ boot disk + data disk      — CORE
-make run-mari-aux-2disk        # //e boot disk + data disk      — CORE (+ XTESTS on aux)
+make run-mari-iie-2disk        # //e lite boot disk + data disk — CORE
+make run-mari-aux-2disk        # //e aux boot disk + data disk  — CORE + XTESTS
 make run-mari-compiler-2disk   # II+ compiler-runner + data disk — CORE + XTESTS + FBTESTS
 
 # izapple2 (machine chosen per target)
 make run-iz-iip-2disk             # II+ lite (SWIFTIIP)      — CORE
 make run-iz-sat-2disk             # II+ Saturn (SWIFTSAT)    — CORE + XTESTS
-make run-iz-iie-2disk             # //e aux (SWIFTAUX)       — CORE + XTESTS
+make run-iz-iie-2disk             # //e lite (SWIFTIIE)      — CORE
+make run-iz-iienh-2disk           # //e aux (SWIFTAUX)       — CORE + XTESTS
 make run-iz-compiler-2disk        # II+ compiler-runner      — CORE + XTESTS + FBTESTS
 make run-iz-compiler-iie-2disk    # //e compiler-runner      — CORE + XTESTS + FBTESTS
 ```

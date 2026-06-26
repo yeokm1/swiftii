@@ -59,14 +59,14 @@ tier; the data disk in drive 2 is the same for all three):
 | `xgrdemo` | ✅              | ✅            | ✅             | `checksum = 1552`|
 | `xfuncs`  | ❌ *(too big)*  | ✅            | ✅             | `210`            |
 
-- `xbig.swift` — a ~9 KB, eight-section **number** tour that exercises the
+- `xbig.swift` — a ~7.8 KB, eight-section **number** tour that exercises the
   Compiler's streaming source window. Each section is wrapped in a function so
   its bytecode flushes to the paged store and its arrays/strings free on return,
   which keeps both the paged compile window and the runtime heap small enough to
   run on **all three** tiers (peak ~1.7 KB vs the Saturn Runner's 1,792 B heap).
   The checksum is purely numeric, so the terse labels don't change it. Prints
   `checksum = 6265`.
-- `xgrdemo.swift` — the ~7 KB **graphics** companion to `xbig`: five lo-res GR
+- `xgrdemo.swift` — the ~8.7 KB **graphics** companion to `xbig`: five lo-res GR
   scenes (colour bars, concentric squares, a **flying starfield** — the
   old-screensaver kind — a bouncing ball, and a rainbow flash). Column/line
   fills and sparse points only (no per-pixel fills), so it runs briskly. Needs

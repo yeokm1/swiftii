@@ -336,9 +336,8 @@ binary selection, not program execution. Each row's single-disk form (drop the
 **Which emulator does what:** izapple2 is CLI-configured with embedded ROMs
 (easiest); it **runs SWIFTSAT on its Saturn** (REPL confirmed working) and
 models the //e as always-128K. Mariani has **no machine CLI** (set the
-model/Saturn/aux in its GUI). A bare-64K //e and a basic-80-col //e aren't
-modelled by either supported emulator, so **those two configs (#6 below, and
-bare-64K) are real-hardware-only for now.**
+model/Saturn/aux in its GUI) and covers the plain //e 64K/no-aux row. A
+basic-80-col //e and RAMWorks III are real-hardware-only for now.
 
 An II+ 80-column path via the **Videx Videoterm** (slot 3) is
 **REPL/program only**: the REPL path is `SWIFTSAT`, so it requires Saturn plus
@@ -356,7 +355,7 @@ the `xwide.swift` sample, output persistence).
 |----|--------------------------------------|----------------------------------------------|-----------|----------|
 | 1  | II+ 16K LC (64K)                     | `run-iz-iip-2disk` · `run-mari-iip-2disk`    | SWIFTIIP  | `SwiftII ][+`, 40-col REPL |
 | 3  | II+ Saturn 128K                      | `run-iz-sat-2disk` · `run-iz-videx-2disk` (adds Videx) · `run-mari-sat-2disk` | SWIFTSAT  | `SwiftII ][+ Saturn`; REPL + XLC builtins work (40-col; +`text80()` 80-col on Videx) |
-| 5  | //e 64K (no aux)                     | `run-iz-iie-2disk` · `run-mari-iie-2disk`    | SWIFTIIE  | `SwiftII //e`, 40-col, native lowercase |
+| 5  | //e 64K (no aux)                     | `run-mari-iie-2disk`                         | SWIFTIIE  | `SwiftII //e`, 40-col, native lowercase |
 | 6  | //e + basic 80-col (1K)              | _(real hardware only)_                       | SWIFTIIE | as #5 - boot the iie-lite disk |
 | 7  | //e + extended 80-col (64K→128K)     | `run-iz-iienh-2disk` · `run-mari-aux-2disk`  | SWIFTAUX  | `SwiftII //e aux`; 80-col + full extras |
 | 8  | //e + RAMWorks III                   | _(real hardware only)_                       | SWIFTAUX | as #7 (large aux) |
@@ -364,11 +363,11 @@ the `xwide.swift` sample, output persistence).
 
 REPL disk set: the **disk picks the interpreter** (one per image), not a HW probe -
 so the izapple2 //e profiles boot the disk that forces the binary under test
-(`run-iz-iie` → iie-lite/SWIFTIIE, `run-iz-iienh` → iie-aux/SWIFTAUX). For
-Mariani, also set the model/Saturn/aux in its GUI (it has no machine CLI) to
-match the disk. `run-mari-iip` / `run-mari-sat` / `run-mari-iie` /
-`run-mari-aux` are the single-disk equivalents and print the exact GUI setting
-to select.
+(`run-iz-iie` → iie-lite/SWIFTIIE on izapple2's 128K //e, `run-iz-iienh` →
+iie-aux/SWIFTAUX). For Mariani, also set the model/Saturn/aux in its GUI (it
+has no machine CLI) to match the disk; `run-mari-iie` is the plain 64K/no-aux
+//e smoke. `run-mari-iip` / `run-mari-sat` / `run-mari-iie` / `run-mari-aux`
+are the single-disk equivalents and print the exact GUI setting to select.
 
 Note: izapple2 runs SWIFTSAT on its Saturn, and keyboard echo works in 40-col.
 
@@ -376,8 +375,9 @@ Note: izapple2 runs SWIFTSAT on its Saturn, and keyboard echo works in 40-col.
 
 | #  | Machine config                            | Target            | Selects  | Expected |
 |----|-------------------------------------------|-------------------|----------|----------|
+| 0  | Original Apple ][ + 16K language card     | `run-iz-ii`       | SWIFTIIP | boots the II+ lite disk; use `C600G` from the monitor prompt |
 | 10 | II+ **48K, no language card**             | `run-iz-iip48`    | (none)   | **does not boot** - ProDOS needs 64K; a clean failure is the pass |
-| 11 | II+ Saturn in a **non-zero slot** (4)     | `run-iz-sat-s4`   | SWIFTSAT | launcher slot-scan finds it + selects SWIFTSAT (slot-conditional trampoline). Selection is what's tested - izapple2 can't then run SWIFTSAT |
+| 11 | II+ Saturn in a **non-zero slot** (4)     | `run-iz-sat-s4`   | SWIFTSAT | launcher slot-scan finds it + selects SWIFTSAT (slot-conditional trampoline) |
 | 12 | II+ + **non-Saturn RAM card** (`memexp`)  | `run-iz-memexp`   | SWIFTIIP | a generic RAM card must **not** false-trigger extras |
 
 These edge / negative targets boot the **system disk alone** - they test boot
@@ -491,9 +491,9 @@ compiler-runner. Three verification layers:
   configuration - //e lite, //e aux (`SWIFTAUX`), the original ][, and the
   Family B disks on //e - is exercised by `make acceptance` and the
   standard-matrix `run-*` targets but has no physical-hardware pass.
-- **Owed (no model exists):** #6 basic-80-col, #8 RAMWorks III, and bare-64K
-  //e are modelled by neither supported emulator, so they are untested
-  everywhere until run on iron.
+- **Owed (no model exists):** #6 basic-80-col and #8 RAMWorks III are modelled
+  by neither supported emulator, so they are untested everywhere until run on
+  iron.
 
 ---
 

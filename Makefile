@@ -1675,7 +1675,7 @@ run-mari-aux: disk-iie-aux-repl
 # the izapple2 run-iz-compiler* set. Each mounts the matching compiler disk (and,
 # for the -2disk variants, the data disk in drive 2 for the on-disk Family B
 # tests) and prints the Mariani model to select first. Naming mirrors izapple2:
-# run-mari-compiler[-iie|-sat] + a `-2disk` suffix for the data-disk variant.
+# run-mari-compiler[-iie|-iie-aux|-sat] + a `-2disk` suffix for the data-disk variant.
 .PHONY: run-mari-compiler run-mari-compiler-2disk \
         run-mari-compiler-iie run-mari-compiler-iie-2disk \
         run-mari-compiler-iie-aux run-mari-compiler-iie-aux-2disk \
@@ -1705,8 +1705,8 @@ run-mari-compiler-sat-2disk: disk-iip-sat-compiler disk-data
 	@echo ">>> In Mariani, configure: Apple ][+ WITH Saturn 128K  -> COMPILER/RUNNER"
 	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run.sh $(PO_IIP_SATCOMP)
 
-# (No supported emulator models the //e basic-80-col card or a bare-64K //e;
-# those configs are real-hardware-only — see ROADMAP "Maybe".)
+# (No supported emulator models the //e basic-80-col card; use Mariani for the
+# plain //e 64K/no-aux smoke and real hardware for basic 80-col.)
 
 # izapple2 run targets. It models a Saturn 128K, ships EMBEDDED ROMs (no
 # version-locked romset) and is a single binary — the lowest-friction
@@ -1718,12 +1718,10 @@ run-mari-compiler-sat-2disk: disk-iip-sat-compiler disk-data
 #   run-iz-iienh  -model=2enh                         -> SWIFTAUX  (iie-aux disk, 65C02)
 # Needs the `izapple2sdl` binary on PATH (github.com/ivanizag/izapple2/releases)
 # or IZAPPLE2=/path/to/it.
-# NOTE: izapple2's //e is always 128K, so `iie`/`iienh` exercise the SWIFTAUX
-# (extended-80-col) case only — bare-64K / basic-80-col //e need real hardware
-# (no supported emulator models them — see ROADMAP "Maybe"). izapple2 DOES
-# run SWIFTSAT on its Saturn (input + output work). One OPEN cosmetic issue:
-# typed keys don't echo while typing on SWIFTSAT under izapple2 (not on lite);
-# input is still captured — see LESSONS 2026-06-01 / docs/testing/TESTING.md.
+# NOTE: izapple2's //e is always 128K, so `iie`/`iienh` do not model a
+# bare-64K //e or a basic-80-col card; use Mariani for the plain //e 64K/no-aux
+# smoke and real hardware for basic-80-col. izapple2 DOES run SWIFTSAT on its
+# Saturn (input + output work, including 40-col keyboard echo).
 # Edge/negative cases (izapple2):
 #   run-iz-ii      -model=2 -s0 language                  Original ][ Integer-BASIC ROM. Boots + runs
 #                                                         programs on every binary (custom crt0_ibasic.s
@@ -1798,7 +1796,8 @@ run-iz-iienh: disk-iie-aux-repl
 # izapple2 with the data disk auto-mounted in drive 2 (run_izapple2.sh reads
 # DATA_DISK). Use these to run the on-disk TESTS/ + samples: `3` FILES -> the
 # data disk -> enter TESTS/ -> RET a file. -sat for the x-prefixed extras tests
-# (SWIFTSAT), -iie for the //e binary (SWIFTAUX).
+# (SWIFTSAT), -iienh for //e aux extras (SWIFTAUX), and -iie for //e lite
+# core tests (SWIFTIIE).
 run-iz-iip-2disk: disk-iip-lite-repl disk-data
 	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run_izapple2.sh iip $(PO_IIP_LITE)
 run-iz-sat-2disk: disk-iip-sat-repl disk-data

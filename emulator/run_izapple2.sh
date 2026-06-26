@@ -56,10 +56,9 @@
 # The copy runs once at startup, so there is no runtime speed cost.
 #
 # izapple2's //e (`2e`/`2enh`) is always 128K (the aux 64K is part of the
-# model), so it exercises the SWIFTAUX (extended-80-col) case — there is no
-# bare-64K or basic-80-col //e here — those need real hardware (no supported
-# emulator models them). The `iienh` profile (65C02) confirms our 6502 code
-# runs on an enhanced //e too.
+# model), so it does not model a bare-64K or basic-80-col //e. Use Mariani for
+# the plain //e 64K/no-aux smoke, and real hardware for basic-80-col. The
+# `iienh` profile (65C02) confirms our 6502 code runs on an enhanced //e too.
 #
 #   language = 16K language card (gives the II+ its 64K so ProDOS boots)
 #   saturn   = Saturn-compatible 128K RAM card (defaults to 128K)

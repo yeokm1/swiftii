@@ -36,15 +36,17 @@ Exact, from `make size` (snapshot: v1.0.1, 2026-06-26). Budget is the
 | `SWIFTAUX` total | //e aux | 47,551 | - | MAIN + aux park |
 | `SWIFTII.SYSTEM` | II+ launcher | 35,311 | 5,393 | boot menu + file UI + editor |
 | `SWIFTII.SYSTEM` | //e launcher | 34,737 | 5,967 | boot menu + file UI + editor |
+| `SWIFTII.SYSTEM` | //e aux launcher | 34,745 | 5,959 | compiler-disk banner variant |
+| `SWIFTII.SYSTEM` | Saturn launcher | 35,318 | 5,386 | compiler-disk banner variant |
 | `DEBUG.SYSTEM` | diagnostic | 3,784 | - | 3-page hardware readout |
 | `COMPILER.SYSTEM` | Family B II+ | 35,026 | 5,678 | `.swift` → `.swb` (flat) |
 | `COMPILER.SYSTEM` | Family B //e | 34,874 | 5,830 | `.swift` → `.swb` (flat, `WITH_IIE`) |
 | `COMPILER.SYSTEM` | Family B //e aux | 35,698 | 5,006 | `.swift` → `.swb` (aux-paged) |
 | `COMPILER.SYSTEM` | Family B Saturn | 36,113 | 4,591 | `.swift` → `.swb` (Saturn-paged) |
-| `RUNNER.SYSTEM` | Family B II+ | 31,940 | 8,764 | runs a `.swb` (flat, Videx 80-col opt) |
-| `RUNNER.SYSTEM` | Family B //e | 29,528 | 11,176 | runs a `.swb` (flat, firmware 80-col) |
-| `RUNNER.SYSTEM` | Family B //e aux | 30,477 | 10,227 | runs a `.swb` (aux-paged) |
-| `RUNNER.SYSTEM` | Family B Saturn | 33,134 | 7,570 | runs a `.swb` (Saturn-paged) |
+| `RUNNER.SYSTEM` | Family B II+ | 31,949 | 8,755 | runs a `.swb` (flat, Videx 80-col opt) |
+| `RUNNER.SYSTEM` | Family B //e | 29,537 | 11,167 | runs a `.swb` (flat, firmware 80-col) |
+| `RUNNER.SYSTEM` | Family B //e aux | 30,486 | 10,218 | runs a `.swb` (aux-paged) |
+| `RUNNER.SYSTEM` | Family B Saturn | 33,143 | 7,561 | runs a `.swb` (Saturn-paged) |
 
 The II+ REPL binaries (`SWIFTIIP` 14 B, `SWIFTSAT` MAIN **4 B**) sit
 hard against the ceiling - this is why several //e-only features below
@@ -173,7 +175,7 @@ program can get.
 | Feature | Cost | Notes |
 |---------|------|-------|
 | Compiler (`.swift` → `.swb`) | II+ 35,026 / //e 34,874 / //e aux 35,698 / Saturn 36,113 B | flat arena 1,834 (II+ and //e); aux/Saturn page completed functions |
-| Runner (runs `.swb`) | II+ 31,940 / //e 29,528 / //e aux 30,477 / Saturn 33,134 B | image buf 2,944 on both flat tiers / heap 2,136, 2,560, 2,560, 1,792 |
+| Runner (runs `.swb`) | II+ 31,949 / //e 29,537 / //e aux 30,486 / Saturn 33,143 B | image buf 2,944 on both flat tiers / heap 2,136, 2,560, 2,560, 1,792 |
 | **//e flat Tier-1** (non-aux) | same flat caps as II+ Tier-1 | `WITH_IIE` native case + Runner firmware 80-col (`text80()` on a 1 KB 80-col card); no extended aux card needed |
 | **Aux-paged bytecode** (//e Tier-3) | code ceiling ~2.9 KB → ~40 KB | 1 KB MAIN window + ROM AUXMOVE; needs the 64 KB extended aux card |
 | **Saturn-paged bytecode** (II+ Tier-2) | similar | Saturn bank window |

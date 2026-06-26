@@ -48,7 +48,7 @@ Two new binaries, both well within budget (no heap trim needed):
 | Binary | Bytes | Headroom (of 40,704) |
 |---|---|---|
 | `COMPILER.SYSTEM` //e flat | 34,874 | 5,830 |
-| `RUNNER.SYSTEM` //e flat | 29,528 | 11,176 |
+| `RUNNER.SYSTEM` //e flat | 29,537 | 11,167 |
 
 The flat //e Compiler is *smaller* than the II+ one because `WITH_IIE` drops
 `emit_inverse_letter` + the digraph branches (and we filter `WITH_INVERSE_JM`
@@ -68,6 +68,8 @@ aux disk for bigger programs.
 since Make keys off mtime not `-D` flags), `make size` (both new rows in
 budget), `make disk-iie-compiler disk-iie-aux-compiler` (both images build with
 ample free space), `make test` / `make sim` green. Emulator gate (human):
-`run-iz-compiler-iie` on a //e without extended aux — confirm `text80()` gives
-firmware 80-col and lowercase renders natively; `run-iz-compiler-iie-aux`
-(`iienh`) for the aux build's paging.
+`run-mari-compiler-iie` with Mariani set to //e 64K/no-aux — confirm `text80()`
+gives firmware 80-col and lowercase renders natively. `run-iz-compiler-iie`
+covers the same flat //e disk/binary under izapple2's always-128K //e profile,
+but not the no-aux hardware configuration. Use `run-iz-compiler-iie-aux`
+(`iienh`) or `run-mari-compiler-iie-aux` for the aux build's paging.
