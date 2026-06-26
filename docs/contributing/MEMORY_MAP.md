@@ -84,6 +84,19 @@ separate: SWIFTSAT uses the `WITH_EXTRAS`/`WITH_SWIFTSAT` path, while
 SWIFTAUX uses `WITH_SWIFTAUX` plus `WITH_IIE` and aux/80-column flags.
 Per-binary budgets are enforced by `make size` and exercised in `make ci`.
 
+Release snapshot, v1.0.1 rebuilt 2026-06-27 (`make release` + `make size`):
+
+| Binary / region | Bytes | Headroom | Map notes |
+|-----------------|------:|---------:|-----------|
+| `SWIFTIIP.SYSTEM` | 40,691 | 13 | BSS `$96E2-$AFE5`; LC `$D000-$F70E` |
+| `SWIFTIIE.SYSTEM` | 40,183 | 521 | BSS `$9474-$B20A`; LC `$D000-$F780` |
+| `SWIFTSAT` MAIN | 40,681 | 23 | BSS `$968C-$B08A`; LC `$D000-$F75A` |
+| `SWIFTSAT` XLC | 7,595 | 4,693 | Saturn bank-1 XLC `$D000-$EDAA` |
+| `SWIFTAUX` MAIN | 39,926 | 778 | BSS `$933B-$B1CD`; staging starts `$B000` |
+| `SWIFTAUX` aux park | 7,522 | - | packed aux overlay bodies under `$2000` |
+| `COMPILER.SYSTEM` II+ / //e / aux / Saturn | 35,027 / 34,875 / 35,699 / 36,114 | 5,677 / 5,829 / 5,005 / 4,590 | BSS ceiling `$BD00` (`$0200` stack) |
+| `RUNNER.SYSTEM` II+ / //e / aux / Saturn | 31,949 / 29,537 / 30,486 / 33,143 | 8,755 / 11,167 / 10,218 / 7,561 | BSS ceiling `$BD00` (`$0200` stack) |
+
 ---
 
 ## Interpreter binary layout

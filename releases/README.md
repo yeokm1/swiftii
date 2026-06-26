@@ -23,10 +23,10 @@ release *Assets*).
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| **v1.0.1** | 2026-06-26 | See notes below |
+| **v1.0.1** | 2026-06-27 | See notes below |
 | **v1.0.0** | 2026-06-25 | Initial public release |
 
-### v1.0.1 — 2026-06-26
+### v1.0.1 — 2026-06-27
 
 - Short-circuit `&&` / `||` logical operators.
 - New //e-native Family B compiler disk `swiftii-iie-compiler.po`: firmware
@@ -38,6 +38,9 @@ release *Assets*).
   deletes each test's generated `.swb` after running it (in the test-sweep
   auto-advance), so the outputs no longer pile up and exhaust the data disk's
   free space partway through a full Family B sweep.
+- Restored the SWIFTSAT REPL blinking cursor without reintroducing the SAT
+  acceptance crash: only the one-key cursor wait is banked into XLC; the line
+  editor and compiler entry stay in MAIN.
 
 ### v1.0.0 — 2026-06-25
 
@@ -68,8 +71,8 @@ canonical stem; append `-v<version>` for the actual filename.
 
 ## v1.0.1 disk contents snapshot
 
-Free-space figures are read by hand from the freshly built `.po` images
-(AppleCommander disk listing), captured 2026-06-26 — `make disks check-readme`
+Free-space figures are read from the freshly staged `.po` images
+(AppleCommander disk listing), captured 2026-06-27 — `make disks check-readme`
 verifies each disk's `README.TXT` and launcher banner, not its free bytes, so
 refresh these numbers from the build when the disk contents change. Every
 bootable disk carries `PRODOS`, `SWIFTII.SYSTEM` (launcher), `DEBUG.SYSTEM`, and

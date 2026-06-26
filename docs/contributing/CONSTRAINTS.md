@@ -141,7 +141,7 @@ stay in main-RAM CODE.
 
 | Region                | Today              | Target          | Notes                                    |
 |-----------------------|--------------------|-----------------|------------------------------------------|
-| Interpreter code      | ~28 KB CODE + ~10 KB LC | ≤ 28 KB main + LC for cold | binary ~40,692 B total (lite); see below |
+| Interpreter code      | ~28 KB CODE + ~10 KB LC | ≤ 28 KB main + LC for cold | binary ~40,691 B total (lite); see below |
 | Compiled bytecode     | 1 KB shared buffer | ≤ 8 KB          | Family A REPL scratch: function arena + top-level scratch (`bcbuf`). Family B caps are tiered - see above. |
 | Heap (objects)        | 2 KB               | ≤ 6 KB          | strings, arrays                          |
 | VM stack              | 32 slots (96 B)    | ~2000 slots (~6 KB) | software stack, separate from 6502 stack |
