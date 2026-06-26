@@ -233,11 +233,13 @@ $2000-       SYS load address (code + rodata + data + ONCE/BSS above)
 
 Key buffer sizes (Makefile `COMPILER_DEFS`/`RUNNER_DEFS`):
 Compiler - source window 4,096 (low RAM, not BSS), bytecode arena
-1,834 B on flat Tier 1 (896 B //e-aux window, 640 B Saturn window),
+1,834 B on flat Tier 1 — both the II+ and the //e-native (`COMPILER_IIE_DEFS`,
+`WITH_IIE`) flat builds — (896 B //e-aux window, 640 B Saturn window),
 const pool 768 B Tier 1 (744 B //e aux, 704 B Saturn), `MAX_GLOBALS` 48 /
-`MAX_FUNCS` 24. Runner - flat II+ `.swb` image 2,944 B (sized to the
-largest Tier 1 `.swb`; executes bytecode in place), runtime heap 2,136 B
-on II+, 2,560 B on //e aux, 1,792 B on Saturn, readFile buffer
+`MAX_FUNCS` 24. Runner - flat `.swb` image 2,944 B on both flat builds (II+
+and //e-native; sized to the largest Tier 1 `.swb`; executes bytecode in
+place), runtime heap 2,136 B on II+, 2,560 B on //e (both the non-aux flat
+and the aux Runner), 1,792 B on Saturn, readFile buffer
 `USERFILE_READ_CAP` 512 B (also the `listDirectory` block buffer), and
 `FILE_BC_SIZE` 1 (bcbuf unused). Source size is disk-bounded (the window
 slides at statement boundaries); on flat Tier 1 the bytecode arena is the

@@ -1,0 +1,6 @@
+true && true
+true && false
+false || true
+false || false
+1 < 2 && 2 < 3
+false || true && false

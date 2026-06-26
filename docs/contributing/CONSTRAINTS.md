@@ -29,8 +29,13 @@ modern convenience is available.
     docs/contributing/design/013-80col-text.md (track B).
   - **//e, with or without an Apple 80-Column Text Card - 64 KB.** The //e
     lite REPL (`SWIFTIIE`; native lowercase + case input, no input/display
-    substitution). An Apple 80-Column Text Card enables 80-column text; without
-    the *extended* aux card it uses the Family B Tier-1 toolchain (40-col).
+    substitution) and a **//e-native Tier-1** Family B toolchain — the flat
+    Compiler/Runner built `WITH_IIE` (native case rendering) with the Runner
+    carrying the //e **firmware** 80-col arm, so a program's `text80()` works on
+    a //e with the basic 1 KB 80-Column Text Card. This is a distinct build from
+    the II+ Tier-1 toolchain (which has no //e firmware 80-col and uses the
+    inverse-video case hack); a non-extended //e gets the //e flavor, not the
+    II+ binary. Flat 1,834 B program cap (no aux paging).
   - **//e + 64 KB extended 80-column card (aux RAM) - 128 KB.** Adds the aux
     extras REPL (`SWIFTAUX`; cold bodies copied down from aux) and the Family B
     **Tier-3** toolchain (bytecode paged into aux, `aux_bc.s`), plus 80-col
@@ -223,15 +228,16 @@ The Family B Compiler/Runner ship in **three tiers** (these are
 the boot disk (the disk declares the machine - there is no runtime probe). Tiers 2 and 3
 page bytecode out of MAIN into spare RAM (Saturn banks / aux), lifting the
 program-size ceiling for *function-heavy* programs. The hard caps below come
-from the per-tier build flags (`Makefile`: `COMPILER_DEFS` / `RUNNER_DEFS`,
-`COMPILER_IIE_DEFS` / `AUX_BC_DEFS`, `COMPILER_SAT_DEFS` / `RUNNER_SAT_DEFS`)
-and the paging code (`src/vm/bcwin.c`, `src/compiler/bcbuf.c`, the store drivers
+from the per-tier build flags (`Makefile`: `COMPILER_DEFS` / `RUNNER_IIP_DEFS`
+for II+ Tier 1, `COMPILER_IIE_DEFS` / `RUNNER_IIE_DEFS` for the //e-native flat
+Tier 1, `COMPILER_IIEAUX_DEFS` / `AUX_BC_DEFS`, `COMPILER_SAT_DEFS` /
+`RUNNER_SAT_DEFS`) and the paging code (`src/vm/bcwin.c`, `src/compiler/bcbuf.c`, the store drivers
 `src/platform/apple2/aux_bc.s` / `saturn_bc.s`). See the 3-tier plan and design
 docs 015/016 for the rationale.
 
 | Limit | **Tier 1 - baseline** | **Tier 2 - Saturn** | **Tier 3 - aux** |
 |---|---|---|---|
-| Machine | II+ 64 K (also any //e in compat mode) | II+ + Saturn 128 K | //e + extended 80-col (aux 64 K) |
+| Machine | II+ 64 K, **or** any //e (two flat builds — see below) | II+ + Saturn 128 K | //e + extended 80-col (aux 64 K) |
 | Bytecode store | none (flat MAIN buffer) | Saturn banks 1–7, `$D000` window | aux park `$2000–$BFFF` |
 | Max source **file** | disk-bound | disk-bound | disk-bound |
 | Max single **statement** | 4 KB | 4 KB | 4 KB |
@@ -250,6 +256,13 @@ Key nuances:
 - **Tier 1 is flat**: top-level + every function + all literals share the one
   1,834 B arena, and the Runner loads the whole `.swb` into a 2,944 B MAIN
   buffer. Total bytecode ≈ 1.8 KB is the hard ceiling.
+- **Tier 1 ships in two flavors**, same flat caps, different render path:
+  the **II+** build (`iip-compiler` disk; pre-IIe inverse-video case hack,
+  optional Videx 80-col on the Runner) and the **//e-native** build
+  (`iie-compiler` disk; `WITH_IIE` native lowercase, Runner has the //e
+  **firmware** 80-col arm so `text80()` works on a //e with the 1 KB 80-Column
+  Text Card — no extended aux card needed). A //e *without* the 64 KB extended
+  aux card uses the //e-native Tier-1 disk, not the II+ one.
 - **Tiers 2 & 3 lift the *total* ceiling only for function-heavy programs.**
   Completed function bodies flush to the store (append-only, never re-read), so
   total code can approach the park size. But two things stay MAIN-resident and

@@ -15,7 +15,7 @@
 void emit_byte(Parser *p, unsigned char b) {
   if (p->err) return;
   if (p->bc_pos >= p->bc_cap) {
-    parser_fail(p, SE_OOM, "compiled bytecode exceeds buffer");
+    parser_fail(p, SE_OOM, "bytecode too big");
     return;
   }
 #ifdef WITH_AUX_COMPILE

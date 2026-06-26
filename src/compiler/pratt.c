@@ -2,14 +2,17 @@
  *
  * Operator precedence (low → high), subset:
  *   PREC_NONE       — sentinel
+ *   PREC_OR         ||     (short-circuits the rhs)
+ *   PREC_AND        &&     (short-circuits the rhs; binds tighter than ||)
  *   PREC_EQUALITY   == !=
+ *   PREC_COALESCE   ??     (short-circuits the rhs)
  *   PREC_COMPARISON < <= > >=
  *   PREC_TERM       + -
  *   PREC_FACTOR     * / %
  *   PREC_UNARY      - !    (prefix only)
  *   PREC_PRIMARY    literals, identifiers, ( ... )
  *
- * Does NOT support: && || ??, function calls beyond
+ * Does NOT support: function calls beyond
  * the print() statement special-case, member access (.), subscripting,
  * string concatenation/interpolation.
  *
@@ -49,16 +52,24 @@ void parse_call_arglist_emit(Parser *p, uint8_t fn_idx);
 typedef unsigned char prec_t;
 
 #define PREC_NONE        0
-#define PREC_EQUALITY    1
-#define PREC_COALESCE    2   /* ??  (between equality and comparison per Swift) */
-#define PREC_COMPARISON  3
-#define PREC_TERM        4
-#define PREC_FACTOR      5
-#define PREC_UNARY       6
-#define PREC_PRIMARY     7
+#define PREC_OR          1   /* ||  (lowest-binding infix) */
+#define PREC_AND         2   /* &&  (binds tighter than ||, looser than ==) */
+#define PREC_EQUALITY    3
+#define PREC_COALESCE    4   /* ??  (between equality and comparison per Swift) */
+#define PREC_COMPARISON  5
+#define PREC_TERM        6
+#define PREC_FACTOR      7
+#define PREC_UNARY       8
+#define PREC_PRIMARY     9
+
+/* The lowest-binding infix precedence — what the expression entry points
+ * pass so the infix loop picks up everything down to `||`. */
+#define PREC_LOWEST      PREC_OR
 
 static prec_t infix_prec(tok_t t) {
   switch (t) {
+    case TOK_OR_OR:  return PREC_OR;
+    case TOK_AND_AND:return PREC_AND;
     case TOK_EQ:
     case TOK_NEQ:    return PREC_EQUALITY;
     case TOK_QQ:     return PREC_COALESCE;
@@ -131,7 +142,7 @@ static void parse_primary(Parser *p) {
     case TOK_LPAREN:
       lexer_next(&p->L);
       parse_primary(p);
-      parse_infix_loop(p, PREC_EQUALITY);
+      parse_infix_loop(p, PREC_LOWEST);
       if (p->err) return;
       if (p->L.tok != TOK_RPAREN) {
         parser_fail(p, SE_BAD_OPCODE, ERR_EXPECTED_RPAREN);
@@ -250,7 +261,7 @@ static void parse_primary(Parser *p) {
         }
       }
       if (p->L.tok != TOK_RBRACKET) {
-        parser_fail(p, SE_BAD_OPCODE, "expected ']'");
+        parser_fail(p, SE_BAD_OPCODE, "want ']'");
         return;
       }
       lexer_next(&p->L);
@@ -271,7 +282,7 @@ static void parse_primary(Parser *p) {
       return;
 
     default:
-      parser_fail(p, SE_BAD_OPCODE, "expected expression");
+      parser_fail(p, SE_BAD_OPCODE, "want expression");
       return;
   }
 }
@@ -328,7 +339,7 @@ static void apply_postfix(Parser *p) {
       parse_expression(p);
       if (p->err) return;
       if (p->L.tok != TOK_RBRACKET) {
-        parser_fail(p, SE_BAD_OPCODE, "expected ']'");
+        parser_fail(p, SE_BAD_OPCODE, "want ']'");
         return;
       }
       lexer_next(&p->L);
@@ -416,6 +427,17 @@ static void apply_postfix(Parser *p) {
   }
 }
 
+/* Parse the right operand of an infix operator seen at `prec`: a primary
+ * (with postfix) followed by any operators of strictly higher precedence
+ * (left-associative). Shared by every infix branch in parse_infix_loop so
+ * the duplicated sequence isn't emitted three times into the tight
+ * LC-resident object. */
+static void parse_rhs(Parser *p, prec_t prec) {
+  parse_primary(p);
+  apply_postfix(p);
+  parse_infix_loop(p, (prec_t)(prec + 1));
+}
+
 static void parse_infix_loop(Parser *p, prec_t min_prec) {
   tok_t op;
   prec_t prec;
@@ -428,6 +450,39 @@ static void parse_infix_loop(Parser *p, prec_t min_prec) {
     if (prec < min_prec || prec == PREC_NONE) return;
 
     lexer_next(&p->L);
+
+    if (op == TOK_AND_AND || op == TOK_OR_OR) {
+      /* Short-circuit `&&` / `||`, both Bool -> Bool. No dedicated
+       * opcode: DUP the lhs, branch on the copy (the popping conditional
+       * jump consumes it), and on the taken side the original lhs is the
+       * result; on the fall-through side POP it and evaluate rhs. Layout
+       * (`&&` shown; `||` only swaps JUMP_IF_FALSE for JUMP_IF_TRUE):
+       *
+       *   <lhs>                  ; already on TOS
+       *   OP_DUP                 ; [lhs, lhs]
+       *   OP_JUMP_IF_FALSE <end>  ; pops the copy; lhs false -> keep lhs, skip
+       *   OP_POP                 ; lhs true -> discard it, result is rhs
+       *   <rhs>
+       *   <end>:                 ; result = lhs (false) or rhs
+       *
+       * The conditional jump requires T_BOOL, so a non-Bool lhs runtime-
+       * errors (SE_TYPE_MISMATCH) like an `if` condition. value_retain/
+       * release on the DUP/POP are no-ops for the immediate Bool. Left-
+       * associative via the `prec + 1` recursion. (pratt.c is
+       * `static-locals (off)`, so `end_patch` survives the recursion.) */
+      uint16_t end_patch;
+      emit_op(p, OP_DUP);
+      end_patch = emit_jump_placeholder(p,
+          (op == TOK_AND_AND) ? OP_JUMP_IF_FALSE : OP_JUMP_IF_TRUE);
+      emit_op(p, OP_POP);
+      parse_rhs(p, prec);
+      if (p->err) return;
+      patch_jump_to_here(p, end_patch);
+      /* Result type is the rhs's: for valid Bool operands that is already
+       * CT_BOOL (comparison, Bool var, or Bool-returning call), so no
+       * explicit set is needed — matching the `??` branch. */
+      continue;
+    }
 
     if (op == TOK_QQ) {
       /* `lhs ?? rhs`: emit OP_NIL_COALESCE before evaluating rhs so
@@ -444,18 +499,14 @@ static void parse_infix_loop(Parser *p, prec_t min_prec) {
        * evaluation differs). */
       uint16_t skip_patch;
       skip_patch = emit_jump_placeholder(p, OP_NIL_COALESCE);
-      parse_primary(p);
-      apply_postfix(p);
-      parse_infix_loop(p, (prec_t)(prec + 1));
+      parse_rhs(p, prec);
       if (p->err) return;
       patch_jump_to_here(p, skip_patch);
       continue;
     }
 
-    parse_primary(p);
-    apply_postfix(p);
     /* Left-associative: keep recursing only for STRICTLY higher prec. */
-    parse_infix_loop(p, (prec_t)(prec + 1));
+    parse_rhs(p, prec);
     if (p->err) return;
     opcode = opcode_for_binop(op);
     emit_op(p, opcode);
@@ -475,7 +526,7 @@ static void parse_infix_loop(Parser *p, prec_t min_prec) {
 void parse_expression(Parser *p) {
   parse_primary(p);
   apply_postfix(p);
-  parse_infix_loop(p, PREC_EQUALITY);
+  parse_infix_loop(p, PREC_LOWEST);
 }
 
 /* Used by statements.c after it has already emitted the primary
@@ -484,7 +535,7 @@ void parse_expression(Parser *p) {
  * the current lexer position. */
 void parse_infix_continuation(Parser *p) {
   apply_postfix(p);
-  parse_infix_loop(p, PREC_EQUALITY);
+  parse_infix_loop(p, PREC_LOWEST);
 }
 
 #ifdef __CC65__

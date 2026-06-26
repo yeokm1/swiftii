@@ -240,6 +240,8 @@ swiftii/
 │       │   ├── pack_swiftaux.py   ← packs the SWIFTAUX //e-aux copy-down directory
 │       │   └── prodos243/     ← ProDOS_2_4_3.po boot template (downloaded
 │       │                        by setup.sh; not committed)
+│       ├── screenshots/       ← doc screenshot capture helpers
+│       │   └── capture.py     ← drives izapple2 headless for screenshots
 │       └── AppleCommander-ac.jar  ← disk-image tool (downloaded by setup.sh;
 │                                    not committed)
 │
@@ -276,19 +278,20 @@ swiftii/
 │   ├── boot_launcher/             ← boot selector (+ in-process editor)
 │   │   └── SWIFTII            ← installed on .po as SWIFTII.SYSTEM,
 │   │                            the ProDOS-auto-launched entry point
-│   └── disk/                  ← eight-disk set (make disks); 1 interpreter per disk
+│   └── disk/                  ← nine-disk set (make disks); 1 interpreter per disk
 │       ├── swiftii-iip-lite-repl.po ← II+ launcher + SWIFTIIP
 │       ├── swiftii-iip-sat-repl.po  ← II+ launcher + SWIFTSAT
 │       ├── swiftii-iie-lite-repl.po ← //e launcher + SWIFTIIE
 │       ├── swiftii-iie-aux-repl.po  ← //e launcher + SWIFTAUX
 │       ├── swiftii-data.po    ← non-boot DATA image (samples + tests)
-│       ├── swiftii-iip-compiler.po     ← Family B Tier-1 (II+)
-│       ├── swiftii-iip-sat-compiler.po ← Family B Tier-2 (II+ Saturn)
-│       └── swiftii-iie-compiler.po     ← Family B Tier-3 (//e aux)
+│       ├── swiftii-iip-compiler.po     ← Family B Tier-1 (II+ flat)
+│       ├── swiftii-iie-compiler.po     ← Family B Tier-1 (//e-native flat, fw 80-col)
+│       ├── swiftii-iie-aux-compiler.po ← Family B Tier-3 (//e aux-paged)
+│       └── swiftii-iip-sat-compiler.po ← Family B Tier-2 (II+ Saturn)
 │
 ├── releases/                  ← published disk images (committed, vs build/)
-│   ├── README.md              ← the eight-disk set + how to use them
-│   └── v<version>/            ← `make release` stages the 8 .po here;
+│   ├── README.md              ← the nine-disk set + how to use them
+│   └── v<version>/            ← `make release` stages the 9 .po here;
 │                                version from src/common/version.h; *.po
 │                                gitignore-exempted (!releases/**/*.po)
 │
@@ -434,7 +437,7 @@ builtin) from C into Swift, there's an obvious place for it.
 Anything in `build/` can be regenerated from `src/` and `tools/` with
 a `make clean && make`. Don't commit anything from `build/`. The one
 committed built artifact is a published disk-image set: `make release`
-copies the eight `.po` from `build/disk/` into `releases/v<version>/`,
+copies the nine `.po` from `build/disk/` into `releases/v<version>/`,
 which is gitignore-exempted (`!releases/**/*.po`) so a tagged version is
 committed. Everything else under `build/` stays disposable.
 

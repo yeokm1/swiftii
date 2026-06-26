@@ -277,6 +277,14 @@ int main(
     userfile_append("/SWIFTII.DATA/TESTLOG",
                     (const unsigned char *)(testlog_failed() ? "F" : "P"), 1);
 #endif
+    /* Delete the .swb the Compiler just wrote next to this test's source on the
+     * data disk. The whole sweep compiles each tier's tests in place, so the
+     * outputs would otherwise pile up tier-folder by tier-folder and fill the
+     * data disk's few KB of slack partway through (real-HW "disk full" around
+     * the ~21st test). We've already loaded the image into RAM, so the file is
+     * dead now; deleting it bounds the disk to at most one stale .swb. Only in
+     * TESTRUN mode — a normal [X] run keeps its saved .swb. */
+    (void)pf_delete(path);
     *(volatile unsigned char *)TESTRUN_MODE_ADDR = 0;   /* consume the marker */
     puts_("\r\rNext test in ");
     {

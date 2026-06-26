@@ -131,9 +131,14 @@ three paged-toolchain tiers:
   program bytecode back through a small MAIN window. This raises total bytecode
   capacity for function-heavy programs while each one function/top-level body
   still has to fit the scratch window.
-- **Tier 3 //e aux** (//e compiler disk): the same paged bytecode model, backed
-  by //e auxiliary RAM through
+- **Tier 3 //e aux** (//e *aux* compiler disk): the same paged bytecode model,
+  backed by //e auxiliary RAM through
   [`aux_bc.s`](../../src/platform/apple2/aux_bc.s).
+
+Tier 1 itself ships in two flavors with identical flat caps: the **II+** build
+and a **//e-native** build (`WITH_IIE` case rendering + a firmware-80-col
+Runner), so a //e *without* the 64K extended aux card runs the //e Tier-1
+compiler disk rather than the II+ one.
 
 - **Compiler** ([`src/main/compiler_main.c`](../../src/main/compiler_main.c)) -
   streams a `.swift` through a 4 KB low-RAM window
@@ -175,8 +180,10 @@ and the cost table in [FEATURES.md](../using/FEATURES.md).
 | `SWIFTIIE` | //e | A, lite | core + `text`/`text80` (80-col firmware); `WITH_IIE` |
 | `SWIFTSAT` | ][+ Saturn 128K | A, extras | extras builtins; cold bodies in **Saturn bank 1** (XLC) |
 | `SWIFTAUX` | //e + 64K aux | A, extras | extras builtins; cold bodies **copied down into aux** |
-| `COMPILER` | ][+///e | B, Tier 1 | `.swift` → `.swb`; flat MAIN bytecode arena |
-| `RUNNER` | ][+///e | B, Tier 1 | executes `.swb` from MAIN; has ProDOS MLI → file I/O |
+| `COMPILER` | ][+ | B, Tier 1 | `.swift` → `.swb`; flat MAIN bytecode arena |
+| `RUNNER` | ][+ | B, Tier 1 | executes `.swb` from MAIN; ProDOS MLI → file I/O; optional Videx 80-col |
+| `COMPILER` | //e (no aux) | B, Tier 1 | flat MAIN arena; `WITH_IIE` native case render |
+| `RUNNER` | //e (no aux) | B, Tier 1 | flat `.swb` in MAIN; **firmware 80-col** (`text80()` on a 1K 80-col card) |
 | `COMPILER` | ][+ Saturn 128K | B, Tier 2 | flushes function bytecode into Saturn banks |
 | `RUNNER` | ][+ Saturn 128K | B, Tier 2 | streams `.swb` bytecode through a Saturn-backed window |
 | `COMPILER` | //e + 64K aux | B, Tier 3 | flushes function bytecode into aux RAM |

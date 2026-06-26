@@ -1,7 +1,8 @@
 /* swbc — host-side `.swift` -> `.swb` compiler.
  *
- * The on-disk Apple II Compiler caps bytecode at FILE_BC_SIZE=1860, so it
- * cannot emit a program large enough to exercise the //e Runner's aux paging
+ * The on-disk Apple II Compiler caps flat Tier-1 bytecode at
+ * FILE_BC_SIZE=1834, so it cannot emit a program large enough to exercise the
+ * //e Runner's aux paging
  * beyond the old in-MAIN image cap. This host tool links the same compiler +
  * `.swb` writer with a large FILE_BC_SIZE, so we can build an oversized but
  * valid `.swb`, drop it on a disk, and run it on the paged Runner on a real

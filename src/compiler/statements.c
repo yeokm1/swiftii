@@ -44,15 +44,15 @@ static void skip_separators_noslide(Parser *p);
 #endif
 
 /* Shared error strings (cross-TU dedup). Declared in parser.h. */
-const char ERR_EXPECTED_NAME[]   = "expected name";
-const char ERR_EXPECTED_LPAREN[] = "expected '('";
-const char ERR_EXPECTED_RPAREN[] = "expected ')'";
-const char ERR_EXPECTED_COLON[]  = "expected ':'";
-const char ERR_EXPECTED_RANGE[]  = "expected '..<'";
+const char ERR_EXPECTED_NAME[]   = "want name";
+const char ERR_EXPECTED_LPAREN[] = "want '('";
+const char ERR_EXPECTED_RPAREN[] = "want ')'";
+const char ERR_EXPECTED_COLON[]  = "want ':'";
+const char ERR_EXPECTED_RANGE[]  = "want '..<'";
 const char ERR_UNDECLARED_NAME[] = "undeclared name";
 
 /* Only referenced in this TU. */
-static const char ERR_NAME_TOO_LONG[] = "name longer than 11 chars";
+static const char ERR_NAME_TOO_LONG[] = "name too long";
 
 /* Validate the current token as a declarable identifier: it must be a
  * TOK_IDENT and fit the symbol-table width (IDENT_MAX-1 = 11 significant
@@ -424,7 +424,7 @@ void parse_call_arglist_emit(Parser *p, uint8_t fn_idx) {
       fn_idx = (uint8_t)patch_stack_pop();
       if (p->err) return;
       if (argc == 255) {
-        parser_fail(p, SE_BAD_OPCODE, "too many arguments");
+        parser_fail(p, SE_BAD_OPCODE, "too many args");
         return;
       }
 #ifndef __CC65__
@@ -759,7 +759,7 @@ static void parse_block(Parser *p) {
   unsigned char saved_repl_print_top;
   if (p->err) return;
   if (p->L.tok != TOK_LBRACE) {
-    parser_fail(p, SE_BAD_OPCODE, "expected '{'");
+    parser_fail(p, SE_BAD_OPCODE, "want '{'");
     return;
   }
   lexer_next(&p->L);
@@ -783,7 +783,7 @@ static void parse_block(Parser *p) {
         p->L.tok != TOK_RBRACE) {
       p->repl_print_top = saved_repl_print_top;
       parser_fail(p, SE_BAD_OPCODE,
-                  "expected ';' or '}'");
+                  "want ';' or '}'");
       return;
     }
   }
@@ -865,7 +865,7 @@ static void parse_if_let(Parser *p) {
   name_len = p->L.tok_len;
   lexer_next(&p->L);
   if (p->L.tok != TOK_ASSIGN) {
-    parser_fail(p, SE_BAD_OPCODE, "expected '='");
+    parser_fail(p, SE_BAD_OPCODE, "want '='");
     return;
   }
   lexer_next(&p->L);
@@ -1151,7 +1151,7 @@ static void parse_for_in(Parser *p) {
   lexer_next(&p->L);
 
   if (p->L.tok != TOK_IN) {
-    parser_fail(p, SE_BAD_OPCODE, "expected 'in'");
+    parser_fail(p, SE_BAD_OPCODE, "want 'in'");
     return;
   }
   lexer_next(&p->L);
@@ -1205,7 +1205,7 @@ static void parse_for_in(Parser *p) {
   /* Define/initialize the loop variable with range_start. */
   if (globals_is_let((uint8_t)gidx)) {
     /* (Should be unreachable — we errored earlier.) */
-    parser_fail(p, SE_BAD_OPCODE, "for-var is let");
+    parser_fail(p, SE_BAD_OPCODE, "for-var let");
     return;
   }
   /* OP_DEFINE_GLOBAL safely overwrites an existing definition (the VM
@@ -1339,7 +1339,7 @@ static void parse_switch(Parser *p) {
     goto done;
   }
   if (p->L.tok != TOK_LBRACE) {
-    parser_fail(p, SE_BAD_OPCODE, "expected '{'");
+    parser_fail(p, SE_BAD_OPCODE, "want '{'");
     goto done;
   }
   lexer_next(&p->L);
@@ -1406,7 +1406,7 @@ static void parse_switch(Parser *p) {
       if (p->err) goto restore;
       if (p->L.tok != TOK_NEWLINE && p->L.tok != TOK_SEMI &&
           p->L.tok != TOK_RBRACE) {
-        parser_fail(p, SE_BAD_OPCODE, "expected ';' or '}'");
+        parser_fail(p, SE_BAD_OPCODE, "want ';' or '}'");
         goto restore;
       }
     }
@@ -1553,7 +1553,7 @@ static void parse_statement(Parser *p) {
           lexer_next(&p->L);  /* consume `[` */
           parse_expression(p);
           if (p->err) return;
-          parser_expect(p, TOK_RBRACKET, "expected ']'");
+          parser_expect(p, TOK_RBRACKET, "want ']'");
           if (p->err) return;
           if (p->L.tok == TOK_ASSIGN) {
             ctype_t elem_ct;
@@ -1707,7 +1707,7 @@ void parse_program(Parser *p) {
     /* Expect terminator: newline, semicolon, or EOF. */
     if (p->L.tok != TOK_NEWLINE && p->L.tok != TOK_SEMI &&
         p->L.tok != TOK_EOF) {
-      parser_fail(p, SE_BAD_OPCODE, "expected ';' or EOF");
+      parser_fail(p, SE_BAD_OPCODE, "want ';' or EOF");
       return;
     }
   }

@@ -7,22 +7,27 @@ programs run on which disk*. The two are linked: the bug only shows up on
 programs big enough to exercise the Saturn tier's paging, and understanding the
 tiers is what made the bug findable.
 
-## The three Family B compiler/Runner builds
+## The Family B compiler/Runner builds
 
 A Family B program is compiled to a `.swb` by a COMPILER, then executed by a
-RUNNER. There are three on-target builds of each, one per disk. They differ only
-in **where bytecode lives** and therefore in three independent RAM budgets:
+RUNNER. There are three on-target *tiers* of each, differing in **where bytecode
+lives** and therefore in three independent RAM budgets. The flat Tier 1 ships in
+two flavors — II+ and a //e-native build (`WITH_IIE` case rendering + a
+firmware-80-col Runner, disk `swiftii-iie-compiler.po`) — which share the flat
+compile-side budget below and the same flat program model; they differ in render
+path and runtime heap (the //e build carries no Videx static BSS, so its Runner
+heap is the higher 2560 B), so they are one column here:
 
-| | flat II+ (Tier 1) | Saturn (Tier 2) | //e aux (Tier 3) |
+| | flat (Tier 1, II+/​//e) | Saturn (Tier 2) | //e aux (Tier 3) |
 |---|---|---|---|
-| disk | `swiftii-iip-compiler.po` | `swiftii-iip-sat-compiler.po` | `swiftii-iie-compiler.po` |
+| disk | `swiftii-iip-compiler.po` / `swiftii-iie-compiler.po` | `swiftii-iip-sat-compiler.po` | `swiftii-iie-aux-compiler.po` |
 | bytecode store | none — whole image in MAIN | Saturn 128K banks ($D000 window) | //e aux 64K ($2000) via AUXMOVE |
 | compile bytecode window (`FILE_BC_SIZE`) | **1834 B** (whole program) | **640 B** (top-level scratch + 1 in-progress fn) | **896 B** (same) |
 | compile const-pool heap (`HEAP_SIZE`) | **768 B** | **704 B** | **744 B** |
 | total compiled code ceiling | ~1834 B | ~36 KB (`AUX_BC_MAX`) | ~36 KB |
-| runtime heap (Runner `HEAP_SIZE`) | **2112 B** | **1792 B** | **2560 B** |
+| runtime heap (Runner `HEAP_SIZE`) | **II+ 2136 / //e 2560 B** | **1792 B** | **2560 B** |
 | runtime bytecode window (`BC_WINDOW`) | n/a (flat) | 512 B | 512 B |
-| machine | any II+ | II+ + Saturn 128K | //e + 64K aux |
+| machine | any II+ (or any //e, //e build) | II+ + Saturn 128K | //e + 64K aux |
 
 The paged builds (`WITH_AUX_COMPILE` / `WITH_AUX_BC`) **flush completed,
 immutable function bodies out to the bank** as they go, so total code can reach
@@ -38,14 +43,17 @@ disk-facing cues carry it, both chosen by the disk at build time (never a runtim
 hardware probe — the same disk-not-hardware rule as `LITE_IIE`; a Saturn probe
 would mislabel a *flat* disk booted on a Saturn-equipped machine):
 
-- **Launcher banner.** The II+ Saturn compiler disk ships its own launcher build
-  (`-DFAMILYB_SATURN`, `build/boot_launcher/sat/SWIFTII`) whose Family B banner
-  reads `SwiftII Compiler ][+ Saturn`. The flat II+ disk's reads
-  `SwiftII Compiler ][+`, the //e disk's `SwiftII Compiler //e`. (+7 B over the
-  flat launcher — the banner string only.)
+- **Launcher banner.** A disk that shares a launcher source with a sibling under
+  the same `COMPILER.SYSTEM` filename ships its own launcher build that tags the
+  banner: the II+ Saturn disk (`-DFAMILYB_SATURN`, `build/boot_launcher/sat/`)
+  reads `SwiftII Compiler ][+ Saturn`, and the //e *aux* disk (`-DFAMILYB_AUX`,
+  `build/boot_launcher/iie-aux/`) reads `SwiftII Compiler //e aux`. The flat II+
+  disk's reads `SwiftII Compiler ][+`, the //e flat disk's `SwiftII Compiler //e`.
+  (A few bytes over the base launcher — the banner string only.)
 - **README Runner line.** Each disk's `README.TXT` names the Runner's required
-  machine/card for its tier (flat = no extra card, Saturn = Saturn 128K, //e =
-  64K aux), substituted per disk from `README_RUNNER` at disk-build time.
+  machine/card for its tier (II+ flat = no extra card, //e flat = any //e,
+  Saturn = Saturn 128K, //e aux = 64K aux), substituted per disk from
+  `README_RUNNER` at disk-build time.
 
 ### Pros and cons
 
@@ -259,7 +267,7 @@ at the two `if` arms overflowed those two binaries' MAIN load image by 1 byte �
 in their cfg the LC segment loads into MAIN, so LC growth counts against MAIN;
 the consolidation is what clears it.) Verified: the failing cases pass, the
 bubble sort runs in a function, host suite 231/0 + the on-disk suites, all four
-REPL + three compiler binaries link, and `xbig` (bubble sort restored) prints
+REPL + the Family B compiler/Runner binaries link, and `xbig` (bubble sort restored) prints
 `checksum = 6265` on real izapple2 flat II+, Saturn, and //e aux. It was
 deterministic and platform-independent all along (pure shared C — repros on the
 host build), so real iron and Mariani hit it identically; the fix lands

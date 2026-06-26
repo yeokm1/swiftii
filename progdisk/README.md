@@ -1,7 +1,7 @@
 # progdisk/
 
-Sources that ship on the SwiftII **program (binary) disks** — the seven
-bootable disks (four REPL + three Family-B compiler) of the eight-disk set
+Sources that ship on the SwiftII **program (binary) disks** — the eight
+bootable disks (four REPL + four Family-B compiler) of the nine-disk set
 built by `make disks`. This is the counterpart to
 [`datadisk/`](../datadisk), which holds the sources **exclusive** to the
 non-boot data disk (drive 2). Samples are split by **destination**: a file lives

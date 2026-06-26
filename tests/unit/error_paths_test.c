@@ -13,10 +13,10 @@
  * that mapped them.
  *
  * Deliberately NOT covered, with the reason:
- *   - "expected '..<'" (ERR_EXPECTED_RANGE) — only reachable in the
+ *   - "want '..<'" (ERR_EXPECTED_RANGE) — only reachable in the
  *     non-BIGLANG lite build; in the BIGLANG host/Family-B build a bare
  *     expression after `in` is taken as the for-in-array form, which
- *     fails with "expected '{'" instead. (Lite is covered structurally
+ *     fails with "want '{'" instead. (Lite is covered structurally
  *     by the same parser; the host test binary is BIGLANG.)
  *   - "for-var is let" (statements.c) — dead code, guarded by an earlier
  *     "for-var let" check; the source comment marks it unreachable.
@@ -72,26 +72,26 @@ struct error_case { const char *src; const char *want; };
 int test_error_paths_compile(void) {
   static const struct error_case cases[] = {
     /* --- statement / declaration parser --- */
-    { "let = 1\n",                         "expected name" },
-    { "func f { }\n",                      "expected '('" },
-    { "print(1\n",                         "expected ')'" },
-    { "func f(a Int) {}\n",                "expected ':'" },
-    { "if 1 < 2 print(1)\n",               "expected '{'" },
+    { "let = 1\n",                         "want name" },
+    { "func f { }\n",                      "want '('" },
+    { "print(1\n",                         "want ')'" },
+    { "func f(a Int) {}\n",                "want ':'" },
+    { "if 1 < 2 print(1)\n",               "want '{'" },
     { "func f() {\n",                      "unexpected EOF" },
-    { "func f() { print(1) print(2) }\n",  "expected ';' or '}'" },
-    { "print(1) print(2)\n",               "expected ';' or EOF" },
+    { "func f() { print(1) print(2) }\n",  "want ';' or '}'" },
+    { "print(1) print(2)\n",               "want ';' or EOF" },
     { "var x Int\n",                       "missing '='" },
-    { "if let x 5 { }\n",                   "expected '='" },
-    { "let q =\n",                         "expected expression" },
-    { "var x: 3 = 1\n",                    "expected type" },
-    { "let a = [1, 2\n",                   "expected ']'" },
-    { "var a: [Int?] = []\n",              "unsupported type" },
-    { "for i 0..<5 {}\n",                  "expected 'in'" },
-    { "random(0..<5)\n",                   "expected 'in:'" },
+    { "if let x 5 { }\n",                   "want '='" },
+    { "let q =\n",                         "want expression" },
+    { "var x: 3 = 1\n",                    "want type" },
+    { "let a = [1, 2\n",                   "want ']'" },
+    { "var a: [Int?] = []\n",              "bad type" },
+    { "for i 0..<5 {}\n",                  "want 'in'" },
+    { "random(0..<5)\n",                   "want 'in:'" },
 
     /* --- name resolution / typing --- */
     { "print(zz)\n",                       "undeclared name" },
-    { "let twelvecharss = 1\n",            "name longer than 11 chars" },
+    { "let twelvecharss = 1\n",            "name too long" },
     { "var w: Int = \"hi\"\n",             "type mismatch" },
     { "let s = \"ok\"\nprint(s.bad)\n",    "unknown member" },
     { "func f(){}\nlet x = f\n",           "need '(...)'" },
@@ -208,7 +208,7 @@ int test_error_paths_limits(void) {
   for (i = 0; i < 300; i++)
     n += snprintf(s_big + n, sizeof(s_big) - (size_t)n, "%s%d", i ? "," : "", i);
   n += snprintf(s_big + n, sizeof(s_big) - (size_t)n, ")\n");
-  rc = expect_compile_error(s_big, (uint16_t)n, "too many arguments", 6);
+  rc = expect_compile_error(s_big, (uint16_t)n, "too many args", 6);
   if (rc) return rc;
 
   /* too many args: print() with > 255 args (distinct call path) */
@@ -300,6 +300,10 @@ int test_error_paths_runtime(void) {
   if (rc) return rc;
   rc = expect_runtime_error("func f() -> Int { return f() }\nprint(f())\n",
                             SE_STACK_OVER, 7);
+  if (rc) return rc;
+  /* && / || runtime-check the lhs is Bool via the conditional jump; a
+   * non-Bool lhs traps. (The rhs on the taken path is not type-checked.) */
+  rc = expect_runtime_error("print(5 && true)\n", SE_TYPE_MISMATCH, 8);
   if (rc) return rc;
   return 0;
 }

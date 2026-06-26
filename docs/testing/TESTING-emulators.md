@@ -72,7 +72,7 @@ Runner (Family B) disk, on a II+".
 > (`run-iz-*-2disk` / `run-mari-*-2disk`). Without it, every program disk
 > still ships the on-disk **`SAMPLES/`**, so you have programs to run.
 
-The eight distribution disks (built by `make disks`). Both emulators cover
+The nine distribution disks (built by `make disks`). Both emulators cover
 REPL and compiler-runner disks; the data-disk variants share the `-2disk`
 suffix on both sides:
 
@@ -82,9 +82,10 @@ suffix on both sides:
 | II+ Saturn | REPL | `disk-iip-sat-repl` | `SWIFTSAT` | `run-iz-sat` | `run-sat` / `run-mari-sat` |
 | //e lite | REPL | `disk-iie-lite-repl` | `SWIFTIIE` | `run-iz-iie` | `run-iie` / `run-mari-iie` |
 | //e aux | REPL | `disk-iie-aux-repl` | `SWIFTAUX` | `run-iz-iienh` | `run-aux` / `run-mari-aux` |
-| Tier-1 compiler | CR | `disk-iip-compiler` | Compiler+Runner | `run-iz-compiler` | `run-mari-compiler` |
+| Tier-1 II+ compiler | CR | `disk-iip-compiler` | Compiler+Runner | `run-iz-compiler` | `run-mari-compiler` |
+| Tier-1 //e compiler (non-aux) | CR | `disk-iie-compiler` | Compiler+Runner | `run-iz-compiler-iie` | `run-mari-compiler-iie` |
+| Tier-3 //e aux compiler | CR | `disk-iie-aux-compiler` | Compiler+Runner | `run-iz-compiler-iie-aux` | `run-mari-compiler-iie-aux` |
 | Tier-2 Saturn compiler | CR | `disk-iip-sat-compiler` | Compiler+Runner | `run-iz-compiler-sat` | `run-mari-compiler-sat` |
-| Tier-3 //e compiler | CR | `disk-iie-compiler` | Compiler+Runner | `run-iz-compiler-iie` | `run-mari-compiler-iie` |
 | Data | - | `disk-data` | - | drive 2 of `run-iz-*-2disk` | drive 2 of `run-mari-*-2disk` |
 
 **Known emulator-only quirks** (don't chase them as bugs):
@@ -157,7 +158,8 @@ E8.
 ## Section 0 - Boot and launcher
 
 For each of the four REPL program disks (II+ lite, II+ Saturn, //e lite,
-//e aux) and, separately, the three Family B compiler disks:
+//e aux) and, separately, the four Family B compiler disks (II+, //e
+non-aux, //e aux, II+ Saturn):
 
 - [ ] **Boots to the launcher menu** without a monitor trap or garbage
       screen. **[II+]** / **[//e]**
@@ -471,7 +473,7 @@ exits. Three pages. **[REPL]** + **[CR]**, **[II+]** / **[//e]**.
 
 ## Section 6 - Family B: Compiler + Runner
 
-The three compiler disks. Flow: **edit → compile (.swift → .swb) → run**.
+The four compiler disks. Flow: **edit → compile (.swift → .swb) → run**.
 **[CR]**. No Saturn/aux card needed to *run* a `.swb`; tiers differ in how
 much **source** the Compiler can handle. **No typing required for the
 end-to-end checks** - each compiler disk ships `SAMPLES/` (e.g.

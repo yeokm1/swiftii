@@ -169,8 +169,8 @@ Full toolchain setup and Makefile reference is in
 - `make test`     - host unit tests (clang, fast)
 - `make sim`      - bytecode tests via py65
 - `make apple2`   - full target build via cc65
-- `make disks`    - build the eight-disk set (4 REPL program disks +
-                    data disk + 3 Family B compiler disks)
+- `make disks`    - build the nine-disk set (4 REPL program disks +
+                    data disk + 4 Family B compiler disks)
 - `make run`      - boot Mariani with the II+ lite disk
 - `make size`     - reports section sizes vs. budgets
 - `make ci`       - clean + all of the above; run before pushing
@@ -218,7 +218,7 @@ match the bits you shipped**:
    the disk contents changed.
 6. Bump any **`make size` snapshot date** noted in `FEATURES.md`.
 
-`make release` only *builds* the eight images — it does **not** boot or
+`make release` only *builds* the nine images — it does **not** boot or
 verify them, and the acceptance harness is **not** part of the release
 process (it is far too slow to run on every build). Booting the disks
 through the acceptance suite is a separate step the human runs on their own

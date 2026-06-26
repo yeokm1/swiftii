@@ -5,9 +5,9 @@ Version @VERSION@
 Built @BUILT@
 
 A Swift-like language for the Apple
-][+ and //e. Ships as an 8-disk
-set: 4 REPL disks, 3 compiler disks,
-and the data disk.
+][+ and //e. Ships as a 9-disk
+set: 4 REPL disks, 4 compiler
+disks, and the data disk.
 
 
 MENU OPTIONS

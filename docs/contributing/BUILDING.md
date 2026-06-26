@@ -102,8 +102,8 @@ Used by `tools/host/diskimg/build_po.sh` to inject the boot selector (installed 
 `SWIFTII.SYSTEM`) + the binaries that program disk carries
 (`SWIFTIIP`/`SWIFTSAT`/`SWIFTIIE`/`SWIFTAUX`.SYSTEM, or the Family B
 `COMPILER`/`RUNNER`.SYSTEM) into a bootable ProDOS `.po` image. SwiftII ships
-**eight** images in two families - the REPL set (four interpreter program
-disks + one non-boot data disk) and three Family B compiler disks (see
+**nine** images in two families - the REPL set (four interpreter program
+disks + one non-boot data disk) and four Family B compiler disks (see
 section *Disk layout* below).
 
 ### 5. ProDOS 2.4.3 system files
@@ -221,7 +221,7 @@ make acceptance CONFIGS="iip sat"  # just these configs
 make acceptance ARGS=--dry-run     # print the plan, launch nothing
 make acceptance ARGS=--window      # interactive GUI window (browser): watch + control
 make acceptance ARGS=--show        # live text screen in the terminal instead
-make acceptance RELEASE=releases/v1.0.0  # run pre-built disks, skip the build
+make acceptance RELEASE=releases/v1.0.1  # run pre-built disks, skip the build
 make acceptance-list               # list the configs
 ```
 
@@ -274,26 +274,27 @@ make apple2-compiler        # Family B Compilers: II+ Tier-1 + //e Tier-3 (aux-p
 make apple2-runner          # Family B Runners:   II+ + //e RUNNER.SYSTEM
 make apple2-saturn-familyb  # II+ Tier-2 (Saturn-paged) Compiler + Runner
 make apple2-familyb         # all three tiers' Compilers + Runners
-make disks                  # build all 8 disks (the five Family A + three Family B)
+make disks                  # build all 9 disks (the five Family A + four Family B)
 make disk-iip-lite-repl          # II+ lite   (build/disk/swiftii-iip-lite-repl.po)
 make disk-iip-sat-repl           # II+ Saturn (build/disk/swiftii-iip-sat-repl.po)
 make disk-iie-lite-repl          # //e lite   (build/disk/swiftii-iie-lite-repl.po)
 make disk-iie-aux-repl           # //e aux    (build/disk/swiftii-iie-aux-repl.po)
 make disk-data              # non-boot DATA disk: samples + tests (swiftii-data.po)
 make disk-iip-compiler      # II+ Tier-1 Family B compiler disk (swiftii-iip-compiler.po)
-make disk-iie-compiler      # //e Tier-3 Family B compiler disk (swiftii-iie-compiler.po)
+make disk-iie-compiler      # //e Tier-1 (non-aux) Family B compiler disk (swiftii-iie-compiler.po)
+make disk-iie-aux-compiler  # //e Tier-3 aux-paged Family B compiler disk (swiftii-iie-aux-compiler.po)
 make disk-iip-sat-compiler  # II+ Tier-2 Saturn Family B compiler disk (swiftii-iip-sat-compiler.po)
-make disks-familyb          # just the three Family B compiler disks
-make release                # build all 8 disks and copy them into releases/
+make disks-familyb          # just the four Family B compiler disks
+make release                # build all 9 disks and copy them into releases/
 make swbc                   # host .swift -> .swb compiler (build/host/swbc) - see "Host tools"
 make run                    # launch emulator with the II+ lite disk
 make run-sat / run-iie / run-aux   # the Saturn / //e-lite / //e-aux disk
 make run-mari-iip-2disk     # II+ lite disk + the data disk in drive 2 (Mariani)
-make run-iz-compiler[-iie]  # boot a Family B compiler disk (izapple2)
-make run-mari-compiler[-iie|-sat]  # boot a Family B compiler disk (Mariani)
+make run-iz-compiler[-iie|-iie-aux]  # boot a Family B compiler disk (izapple2)
+make run-mari-compiler[-iie|-iie-aux|-sat]  # boot a Family B compiler disk (Mariani)
 ```
 
-The project ships **two disk families** (8 images). **Family A** (the REPL
+The project ships **two disk families** (9 images). **Family A** (the REPL
 disks) is four single-interpreter program disks, each carrying the boot
 launcher + exactly ONE interpreter + the demo programs (`SAMPLES/`), plus a
 non-boot DATA disk with those samples and the on-disk test suite (`TESTS/`).
@@ -301,17 +302,22 @@ Every program disk also carries a `README.TXT` help file in its root (opened
 from the File selector / editor; the launcher's About screen points to it) -
 the II+ disks get an ALL-CAPS copy so it reads natively on a machine with no
 lowercase glyphs, the //e disks a mixed-case copy.
-**Family B** (design doc 015) is three **compiler disks** - launcher
+**Family B** (design doc 015) is four **compiler disks** - launcher
 (+ in-process editor) + the on-disk **Compiler** and **Runner**, no REPL
-interpreter - for editing and running bigger programs that compile to `.swb`,
-one per Compiler tier (II+ Tier-1 flat, II+ Tier-2 Saturn-paged, //e Tier-3
-aux-paged). Because all three tiers ship `COMPILER.SYSTEM`/`RUNNER.SYSTEM`
-under the same filenames, two disk-facing cues carry the tier: the launcher's
-Family B **banner** (`SwiftII Compiler ][+` / `…][+ Saturn` / `…//e` - the
-Saturn disk gets its own `-DFAMILYB_SATURN` launcher build, since the tier
-can't be probed at run time) and the `README.TXT` **Runner line**, which names
-that tier's required machine/card (flat = no extra card, Saturn = Saturn 128K,
-//e = 64K aux), substituted per disk from `README_RUNNER` at disk-build time.
+interpreter - for editing and running bigger programs that compile to `.swb`.
+Two are flat **Tier-1** builds (II+ and //e-native: the //e one is built
+`WITH_IIE` for native case + a firmware-80-col Runner, runs on any //e with no
+extended aux card), plus II+ **Tier-2** Saturn-paged and //e **Tier-3**
+aux-paged. Because all four ship `COMPILER.SYSTEM`/`RUNNER.SYSTEM` under the
+same filenames, two disk-facing cues carry the tier: the launcher's Family B
+**banner** (`SwiftII Compiler ][+` / `…//e` / `…//e aux` / `…][+ Saturn` - the
+two disks that share a launcher source with a sibling, the //e-aux and the
+Saturn, each get their own launcher build (`-DFAMILYB_AUX` / `-DFAMILYB_SATURN`)
+that tags the banner, since the tier can't be probed at run time) and the
+`README.TXT` **Runner line**, which names that tier's required machine/card
+(II+ flat = no extra card, //e flat = any //e, Saturn = Saturn 128K, //e aux =
+64K extended aux card), substituted per disk from `README_RUNNER` at disk-build
+time.
 
 | `make` target      | image                      | launcher + binaries                       |
 |--------------------|----------------------------|-------------------------------------------|
@@ -319,9 +325,10 @@ that tier's required machine/card (flat = no extra card, Saturn = Saturn 128K,
 | `disk-iip-sat-repl`     | `swiftii-iip-sat-repl.po`       | II+ launcher + `SWIFTSAT.SYSTEM`          |
 | `disk-iie-lite-repl`    | `swiftii-iie-lite-repl.po`      | //e launcher + `SWIFTIIE.SYSTEM`          |
 | `disk-iie-aux-repl`     | `swiftii-iie-aux-repl.po`       | //e launcher + `SWIFTAUX.SYSTEM`          |
-| `disk-iip-compiler`| `swiftii-iip-compiler.po`  | II+ launcher + Tier-1 `COMPILER.SYSTEM` + `RUNNER.SYSTEM` |
+| `disk-iip-compiler`| `swiftii-iip-compiler.po`  | II+ launcher + Tier-1 (II+ flat) `COMPILER.SYSTEM` + `RUNNER.SYSTEM` |
+| `disk-iie-compiler`| `swiftii-iie-compiler.po`  | //e launcher + Tier-1 (//e-native flat, fw 80-col) `COMPILER.SYSTEM` + `RUNNER.SYSTEM` |
+| `disk-iie-aux-compiler`| `swiftii-iie-aux-compiler.po` | //e launcher + Tier-3 (aux-paged) `COMPILER.SYSTEM` + `RUNNER.SYSTEM` |
 | `disk-iip-sat-compiler`| `swiftii-iip-sat-compiler.po` | II+ launcher + Tier-2 (Saturn-paged) `COMPILER.SYSTEM` + `RUNNER.SYSTEM` |
-| `disk-iie-compiler`| `swiftii-iie-compiler.po`  | //e launcher + Tier-3 (aux-paged) `COMPILER.SYSTEM` + `RUNNER.SYSTEM` |
 | `disk-data`        | `swiftii-data.po`          | full samples + `TESTS/`/`XTESTS/`/`FBTESTS/` (drive 2) |
 
 On a **Family B** disk the editor's Ctrl-R (or `X` on a `.swift` in the file
@@ -429,21 +436,26 @@ individually via `make apple2-compiler`, `make apple2-runner`, and
   sliding window and writes a `.swb` next to the source (doc 015/016).
   Built in **three tiers** that grow the compilable program size by
   pushing bytecode out of MAIN (same `swiftii-compiler.cfg`, different
-  flags):
-  - **Tier 1** (II+ flat, `make apple2-compiler` → `build/apple2/compiler/`):
-    bytecode stays in MAIN; smallest reach. Ships on `disk-iip-compiler`.
+  flags); Tier 1 ships in two flavors (II+ and //e-native):
+  - **Tier 1** (flat, bytecode stays in MAIN; smallest reach,
+    `make apple2-compiler`): the **II+** build (`build/apple2/compiler/`,
+    `disk-iip-compiler`) and the **//e-native** build (`build/apple2/compiler/iie/`,
+    `-DWITH_IIE`, firmware-80-col Runner, `disk-iie-compiler`) — same flat caps,
+    different render path.
   - **Tier 2** (II+ Saturn, `make apple2-saturn-familyb`): `-DWITH_AUX_COMPILE
     -DBC_STORE_SATURN` pages bytecode into Saturn 128K banks. Ships on
     `disk-iip-sat-compiler`.
-  - **Tier 3** (//e, part of `make apple2-compiler` → `build/apple2/iie/`):
+  - **Tier 3** (//e aux, part of `make apple2-compiler` → `build/apple2/compiler/iie-aux/`):
     `-DWITH_AUX_COMPILE` pages bytecode into //e aux RAM. Ships on
-    `disk-iie-compiler`.
+    `disk-iie-aux-compiler`.
 - `RUNNER.SYSTEM` - the MAIN-only `.swb` runner (VM + runtime + all
-  builtins inline; no compiler). Built per machine: a plain II+ build, a
-  `-DWITH_IIE` //e build that pages bytecode through aux RAM
-  (`-DWITH_AUX_BC`), and a Saturn-paged II+ build
-  (`-DWITH_AUX_BC -DBC_STORE_SATURN`) for the Tier-2 disk - so each
-  compiler tier has a matching Runner that reads back its paged `.swb`.
+  builtins inline; no compiler). Built per machine: a plain II+ flat build
+  (optional Videx 80-col), a `-DWITH_IIE` //e-native flat build with the
+  firmware 80-col arm (no aux paging, loads the whole `.swb` into MAIN), a
+  `-DWITH_IIE -DWITH_AUX_BC` //e build that pages bytecode through aux RAM, and
+  a Saturn-paged II+ build (`-DWITH_AUX_BC -DBC_STORE_SATURN`) for the Tier-2
+  disk - so each compiler tier (and the two flat flavors) has a matching Runner
+  that reads back its `.swb`.
 
 (There are **no** HGR binaries: no `SWIFTIIH.SYSTEM` /
 `SWIFTIIF.SYSTEM` and no `WITH_HGR`/`WITH_FULL`/`WITH_AUX_DATA`
@@ -489,8 +501,9 @@ or `make clean` first (LESSONS).
 
 `make ci` builds every ship binary - the four interpreters
 (`apple2-all`), the Family B Compiler + Runners (`apple2-familyb`),
-and the three launcher builds (II+, //e, and the II+ Saturn-compiler
-variant) - then verifies size budgets for each and builds all eight disks.
+and the four launcher builds (II+, //e, //e-aux-compiler, and the II+
+Saturn-compiler variant — each tags the Family B banner for its disk) -
+then verifies size budgets for each and builds all nine disks.
 
 ### Sample cc65 invocation
 

@@ -31,6 +31,10 @@ demos in [`progdisk/samples/`](../../../progdisk/samples) ship under
   the `append` write-back rule (statement vs expression form).
 - `toptional.swift` — `if let`, `if let … else`, `??`, force-unwrap `!`,
   and an `Int?`-returning function on both the some and nil paths.
+- `tlogic.swift` — short-circuit `&&` / `||`: the truth tables, precedence
+  (`&&` binds tighter than `||`, comparison tighter than both, prefix `!`
+  tightest), and — via a call-counter probe — that the rhs is evaluated
+  only when the lhs doesn't already decide the result.
 - `tbranch.swift` — `if`/`else if`/`else` in a **top-level** `while`, the
   "jump over the rest to the end" codegen path.
 - `tmod.swift` — `%` in a top-level `while` body (checked against an

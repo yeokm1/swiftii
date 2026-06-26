@@ -59,7 +59,6 @@ extern uint8_t  __fastcall__ a_mli_get_prefix(void);
 extern uint8_t  __fastcall__ a_mli_set_prefix(void);
 extern uint16_t __fastcall__ a_mli_read_dirblk(void);
 extern uint8_t  __fastcall__ a_mli_close(void);
-extern uint8_t  __fastcall__ a_mli_destroy(void);   /* DESTROY g_path (file)   */
 extern uint8_t  __fastcall__ a_mli_destroy_note(void);
 extern uint8_t  __fastcall__ a_mli_create_note(void);
 extern void     __fastcall__ a_mli_write_note(void);
@@ -476,17 +475,9 @@ static uint8_t countdown(uint16_t n, uint8_t total, const uint8_t *name) {
  * per-test PASS/FAIL from the TESTLOG is filled in by a later slice. */
 static void results_page(void) {
     test_note_destroy();
-    /* Family B left a SWIFTII.SWB on the boot disk (the Compiler's output,
-     * overwritten each test) — delete it so it doesn't waste a block on the
-     * tight compiler disks. Absolute path = boot prefix + SWIFTII.SWB. */
-    if (g_familyb && g_boot_prefix[0]) {
-        static const char swb[] = "SWIFTII.SWB";
-        uint8_t i, k = 0;
-        for (i = 1; i <= g_boot_prefix[0]; i++) g_path[1 + k++] = g_boot_prefix[i];
-        for (i = 0; swb[i]; i++)                g_path[1 + k++] = (uint8_t)swb[i];
-        g_path[0] = k;
-        a_mli_destroy();                          /* best effort */
-    }
+    /* The Compiler writes each test's .swb next to its source on the data disk;
+     * the Runner deletes its own .swb after loading it (runner_main.c, TESTRUN
+     * mode), so the sweep leaves no .swb behind — nothing to clean up here. */
     /* Family B: read the per-test verdicts the Runner logged to TESTLOG
      * (P/F per test, in run order) so we can list the failures by name. */
     {

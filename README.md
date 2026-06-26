@@ -2,12 +2,12 @@
 
 **A Swift-flavored mini development environment for the Apple II.** 
 
-SwiftII supports an implmentation of `let`/`var`, optionals, type inference, string interpolation, arrays, functions. A real, bytecode-compiled language that boots from a 140 KB floppy and runs on a 1 MHz 6502, from an original Apple ][ and up in ProDOS 2.4.3.
+SwiftII supports an implementation of `let`/`var`, optionals, type inference, string interpolation, arrays, functions. A real, bytecode-compiled language that boots from a 140 KB floppy and runs on a 1 MHz 6502, from an original Apple ][ and up in ProDOS 2.4.3.
 
-Both an REPL and bytecode compiler/runner setups are provided depending on disk.
+Both a REPL and bytecode compiler/runner setups are provided depending on disk.
 
 ```
-SwiftII //e 1.0.0
+SwiftII //e 1.0.1
 > let result = 40 + 2
 > print("the result is \(result)")
 the result is 42
@@ -20,7 +20,7 @@ the result is 42
 The **//e** has a lowercase keyboard, so you type that as-is. An uppercase-only **][+** has no lowercase and no `\`, so you type the *same* session with digraphs (`??/` is `\`) — SwiftII reads it back as the canonical Swift above. That's exactly what's on the real ][+ screen in the photo below:
 
 ```
-SWIFTII ][+ 1.0.0
+SWIFTII ][+ 1.0.1
 > LET RESULT = 40 + 2
 > PRINT("THE RESULT IS ??/(RESULT)")
 THE RESULT IS 42
@@ -84,7 +84,7 @@ And it runs in **64 KB**: the lite system fits a stock 64 KB Apple II, while the
 
 Download a disk image (`.po`) from the [GitHub Releases](https://github.com/yeokm1/swiftii/releases) assets and open it in an Apple II emulator - **Mariani** on macOS, **AppleWin** on Windows, or [**izapple2**](https://github.com/ivanizag/izapple2/releases) (cross-platform).
 
-Start with `swiftii-iip-lite-repl` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.0.po`) for the basic II+ REPL - it boots straight to the launcher. Pick another disk from the [table below](#on-real-hardware) for graphics, memory access, speaker clicks, sound in compiled programs, or the compiler.
+Start with `swiftii-iip-lite-repl` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.1.po`) for the basic II+ REPL - it boots straight to the launcher. Pick another disk from the [table below](#on-real-hardware) for graphics, memory access, speaker clicks, sound in compiled programs, or the compiler.
 
 Want to build it yourself? See [Build from source](#build-from-source).
 
@@ -104,7 +104,7 @@ The full catalogue is in [`progdisk/README.md`](progdisk/README.md).
 
 ## On real hardware
 
-A SwiftII disk is a standard 140 KB ProDOS 5.25" image. Grab a prebuilt `.po` from the [GitHub Releases](https://github.com/yeokm1/swiftii/releases) assets (or build the set yourself - see [Build from source](#build-from-source)). Write one to a floppy with **ADTPro**, or run it from a **floppy emulator** (BMOW Floppy Emu, CFFA3000). Each disk is `swiftii-….po` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.0.po`); pick the one for your machine:
+A SwiftII disk is a standard 140 KB ProDOS 5.25" image. Grab a prebuilt `.po` from the [GitHub Releases](https://github.com/yeokm1/swiftii/releases) assets (or build the set yourself - see [Build from source](#build-from-source)). Write one to a floppy with **ADTPro**, or run it from a **floppy emulator** (BMOW Floppy Emu, CFFA3000). Each disk is `swiftii-….po` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.1.po`); pick the one for your machine:
 
 | Disk | For | You get |
 |------|-----|---------|
@@ -112,7 +112,7 @@ A SwiftII disk is a standard 140 KB ProDOS 5.25" image. Grab a prebuilt `.po` fr
 | `…-iip-sat-repl` | ][+ with Saturn 128K | core **+ graphics, memory, speaker click + 80-col (Videx)** |
 | `…-iie-lite-repl` | //e | core + native lowercase / 80-column |
 | `…-iie-aux-repl` | //e with 64K aux | core **+ graphics, memory, speaker click + 80-col** |
-| `…-{iip,iip-sat,iie}-compiler` | ][+ / Saturn / //e | **Family B**: on-disk compiler + runner |
+| `…-{iip,iip-sat,iie,iie-aux}-compiler` | ][+ / Saturn / //e | **Family B**: on-disk compiler + runner |
 | `swiftii-data` | drive 2 | samples + the on-disk test suite |
 
 Two drives (or a Floppy Emu in dual-disk mode) keep a program disk in drive 1 and your `.swift`/`.swb` files on the data disk in drive 2; single-drive machines still get `SAMPLES/` on every disk. Step-by-step in the [tutorial](docs/using/TUTORIAL.md).
@@ -139,6 +139,7 @@ let n = maybe ?? 0
 
 while count < 10 { count += 1 }  // control flow
 for i in 0..<5 { print(i) }
+if count > 0 && count < 100 { print("in range") }  // && / || short-circuit
 
 func greet(name: String) -> String {   // functions, positional args
     return "Hello, \(name)!"
@@ -179,7 +180,7 @@ For contributors and anyone who wants the toolchain. Needs macOS 13+, Xcode Comm
 ```sh
 ./scripts/setup.sh   # installs cc65, py65, AppleCommander + the ProDOS template
 make run             # build the II+ disk and boot it in Mariani
-make disks           # build all eight .po images into build/disk/
+make disks           # build all nine .po images into build/disk/
 ```
 
 ```sh

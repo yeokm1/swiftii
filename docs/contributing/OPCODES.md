@@ -124,8 +124,12 @@ future descending-loop/codegen use, but currently falls through to
 `==` / `!=` compile to `OP_EQ` / `OP_NEQ` and compare object identity, matching
 the language reference.
 
-Logical `&&` and `||` are implemented at the compiler level via
-short-circuit jumps, not as bytecode opcodes.
+Logical `&&` and `||` have no dedicated opcodes. The compiler emits a
+short-circuit sequence: `OP_DUP` the lhs, branch on the copy with the
+popping `OP_JUMP_IF_FALSE` (`&&`) / `OP_JUMP_IF_TRUE` (`||`) — on the
+taken side the original lhs is the result; on the fall-through side
+`OP_POP` it and evaluate the rhs. Logical negation is `OP_NOT` (`!`).
+`??` short-circuits similarly via `OP_NIL_COALESCE`.
 
 ### Control flow ($50-$5F)
 

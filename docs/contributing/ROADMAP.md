@@ -21,7 +21,7 @@ Use the other docs for detail:
 
 ProDOS 2.4.3 is the only target operating system.
 
-Current status: **Phases 0-17 are closed. v1.0.0 is the released version.**
+Current status: **Phases 0-17 are closed. v1.0.1 is the released version.**
 
 ---
 
@@ -496,4 +496,5 @@ Completed:
 - [x] **Distribution disks.** Built and staged the eight-disk release set
       with `make release` under [`releases/v1.0.0/`](../../releases/v1.0.0/):
       four REPL program disks, one data disk, and three Family B compiler
-      disks.
+      disks (II+, //e aux, II+ Saturn). v1.0.1 added the //e non-aux
+      compiler disk and expanded the release set to nine images.

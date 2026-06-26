@@ -15,7 +15,7 @@ programs.
 
 ## 1. Pick a disk and boot it
 
-SwiftII ships as **eight `.po` disk images**. For a first session, the
+SwiftII ships as **nine `.po` disk images**. For a first session, the
 plain II+ lite disk is the simplest:
 
 | You have… | Boot this disk | What you get |
@@ -48,7 +48,7 @@ You don't have to build them. The ready-to-use `.po` images are:
   **[GitHub Release](https://github.com/yeokm1/swiftii/releases)** (the
   *Assets* of the latest release).
 
-Download the eight images (four REPL disks, one data disk, three Family B
+Download the nine images (four REPL disks, one data disk, four Family B
 compiler disks) from either place. (To build them yourself instead, run
 `make disks` - they land in `build/disk/`.)
 
@@ -112,7 +112,7 @@ The REPL ("read-eval-print loop") runs what you type, line by line. The
 prompt is `> `.
 
 ```
-SwiftII ][+ 1.0.0
+SwiftII ][+ 1.0.1
 Type :help :list :quit
 > 1 + 2
 3
@@ -207,6 +207,15 @@ use `;` to separate statements. For longer programs, use the editor (section 6).
 > let n = 7
 > if n % 2 == 0 { print("even") } else { print("odd") }
 odd
+```
+
+Combine conditions with `&&` (and) / `||` (or); both short-circuit, so
+the right side runs only when the left hasn't already decided. Use `!`
+to negate:
+
+```
+> if n > 0 && n < 10 { print("single digit") }
+single digit
 ```
 
 **Loops** - `while`, and `for-in` over a range:
@@ -398,9 +407,11 @@ The full platform surface (`htab`/`vtab`, `scrn`, `color`, …) is in
 ## 8. Bigger programs: the Family B compiler
 
 The REPL keeps your whole program in memory, so it's bounded by RAM. For
-**bigger** programs there's a separate **compiler** disk set
-(`swiftii-iip-compiler.po`, `swiftii-iip-sat-compiler.po`,
-`swiftii-iie-compiler.po`). These don't have a REPL - instead they
+**bigger** programs there's a separate **compiler** disk set — one per
+machine: `swiftii-iip-compiler.po` (any II+), `swiftii-iie-compiler.po`
+(any //e, with firmware 80-col), `swiftii-iie-aux-compiler.po` (//e with a
+64K extended aux card, for bigger programs), and `swiftii-iip-sat-compiler.po`
+(II+ with a Saturn 128K card). These don't have a REPL - instead they
 **compile** your `.swift` source to a compact `.swb` file, then **run**
 it:
 

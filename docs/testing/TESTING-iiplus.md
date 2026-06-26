@@ -602,6 +602,6 @@ enough.
 - [ ] No regressions in the automated suites: `make ci` green.
 
 When this is signed off (and the //e disks are covered in the emulator
-pass), the **real-hardware acceptance gate** is met and the v1.0.0 release
-(disks staged under `releases/v1.0.0/`) is blessed. The `v1.0.0` git tag is
-created manually on GitHub.
+pass), the **real-hardware acceptance gate** is met for the current release
+candidate. The release images are staged under `releases/v<version>/`, and
+the git tag is created manually on GitHub.

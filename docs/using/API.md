@@ -165,7 +165,7 @@ let f = maybe!                  // force-unwrap; runtime error if nil
 |-------|-----------|
 | Arithmetic | `+` `-` `*` `/` `%` (Int; `+` also concatenates `String`) |
 | Comparison | `==` `!=` `<` `<=` `>` `>=` |
-| Logical | `&&` `\|\|` `!` (short-circuit) |
+| Logical | `&&` `\|\|` `!` (`&&` / `\|\|` short-circuit) |
 | Assignment | `=` `+=` `-=` `*=` `/=` (compound desugars to `x = x <op> y`) |
 | Optional | `??` (coalesce) · `!` (force-unwrap, postfix) |
 | Range | `a..<b` (half-open) · `a...b` (closed) |

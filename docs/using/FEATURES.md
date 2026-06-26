@@ -21,30 +21,32 @@ often the reason it ships on one binary and not another.
 
 ## 1. Binary footprints (disk space)
 
-Exact, from `make size` (snapshot: v1.0.0, 2026-06-23). Budget is the
+Exact, from `make size` (snapshot: v1.0.1, 2026-06-26). Budget is the
 40,704-byte ProDOS ceiling.
 
 | Binary | Target | Bytes | Headroom | On-disk role |
 |--------|--------|------:|---------:|--------------|
-| `SWIFTIIP.SYSTEM` | II+ lite | 40,692 | 12 | REPL, core language |
-| `SWIFTSAT` MAIN | II+ Saturn | 40,702 | 2 | REPL extras (hot ops) |
+| `SWIFTIIP.SYSTEM` | II+ lite | 40,690 | 14 | REPL, core language |
+| `SWIFTIIE.SYSTEM` | //e lite | 40,182 | 522 | REPL, core language |
+| `SWIFTSAT` MAIN | II+ Saturn | 40,700 | 4 | REPL extras (hot ops) |
 | `SWIFTSAT` XLC | II+ Saturn | 7,602 | 4,686 (in 12 KB LC) | cold bodies + REPL cursor in Saturn bank 1 |
-| `SWIFTSAT` total | II+ Saturn | 48,308 | - | MAIN + XLC overlay |
-| `SWIFTIIE.SYSTEM` | //e lite | 40,184 | 520 | REPL, core language |
-| `SWIFTAUX` MAIN | //e aux | 39,927 | 777 | REPL extras (hot ops) |
+| `SWIFTSAT` total | II+ Saturn | 48,306 | - | MAIN + XLC overlay |
+| `SWIFTAUX` MAIN | //e aux | 39,925 | 779 | REPL extras (hot ops) |
 | `SWIFTAUX` park | //e aux | 7,522 | - | cold bodies copied into aux |
-| `SWIFTAUX` total | //e aux | 47,553 | - | MAIN + aux park |
+| `SWIFTAUX` total | //e aux | 47,551 | - | MAIN + aux park |
 | `SWIFTII.SYSTEM` | II+ launcher | 35,311 | 5,393 | boot menu + file UI + editor |
 | `SWIFTII.SYSTEM` | //e launcher | 34,737 | 5,967 | boot menu + file UI + editor |
 | `DEBUG.SYSTEM` | diagnostic | 3,784 | - | 3-page hardware readout |
-| `COMPILER.SYSTEM` | Family B | 35,032 | 5,672 | `.swift` → `.swb` |
-| `COMPILER.SYSTEM` | Family B //e | 35,704 | 5,000 | `.swift` → `.swb` (aux-paged) |
-| `COMPILER.SYSTEM` | Family B Saturn | 36,119 | 4,585 | `.swift` → `.swb` (Saturn-paged) |
-| `RUNNER.SYSTEM` | Family B II+ | 31,940 | 8,764 | runs a `.swb` |
-| `RUNNER.SYSTEM` | Family B //e | 30,477 | 10,227 | runs a `.swb` (aux-paged) |
+| `COMPILER.SYSTEM` | Family B II+ | 35,026 | 5,678 | `.swift` → `.swb` (flat) |
+| `COMPILER.SYSTEM` | Family B //e | 34,874 | 5,830 | `.swift` → `.swb` (flat, `WITH_IIE`) |
+| `COMPILER.SYSTEM` | Family B //e aux | 35,698 | 5,006 | `.swift` → `.swb` (aux-paged) |
+| `COMPILER.SYSTEM` | Family B Saturn | 36,113 | 4,591 | `.swift` → `.swb` (Saturn-paged) |
+| `RUNNER.SYSTEM` | Family B II+ | 31,940 | 8,764 | runs a `.swb` (flat, Videx 80-col opt) |
+| `RUNNER.SYSTEM` | Family B //e | 29,528 | 11,176 | runs a `.swb` (flat, firmware 80-col) |
+| `RUNNER.SYSTEM` | Family B //e aux | 30,477 | 10,227 | runs a `.swb` (aux-paged) |
 | `RUNNER.SYSTEM` | Family B Saturn | 33,134 | 7,570 | runs a `.swb` (Saturn-paged) |
 
-The II+ REPL binaries (`SWIFTIIP` 12 B, `SWIFTSAT` MAIN **2 B**) sit
+The II+ REPL binaries (`SWIFTIIP` 14 B, `SWIFTSAT` MAIN **4 B**) sit
 hard against the ceiling - this is why several //e-only features below
 can't be carried on the II+, and why `SWIFTSAT`'s REPL cursor body had to
 go to the XLC overlay (section 4).
@@ -80,6 +82,7 @@ binary footprint above, not separately isolable.
 | `let` / `var`, assignment, compound-assign | base | |
 | String interpolation `\(…)`, concat, `.count`, indexing | base | |
 | Optionals (`T?`, `nil`, `??`, force) | base | |
+| Short-circuit `&&` / `\|\|`, prefix `!` | base | `&&`/`\|\|` reuse DUP + the conditional jumps (no new opcode); fit lite by terser compiler diagnostics |
 | `if` / `else if` / `else`, `if let` / `if let … else` | base | if-let-else funded by relocating array opcodes to XLC |
 | `while`, `for-in` over ranges, `break` | base | direct array `for-in` is Family B |
 | Functions, parameters, recursion, return | base | |
@@ -101,7 +104,7 @@ binary footprint above, not separately isolable.
 | Cold-reboot-to-menu on `:quit` | all four | base | - |
 
 The two //e-only REPL features are absent on `SWIFTIIP` / `SWIFTSAT`
-purely on budget (2–12 B headroom can't absorb 340 B + 1 KB BSS).
+purely on budget (4–14 B headroom can't absorb 340 B + 1 KB BSS).
 
 **Blinking cursor.** The 40-col prompt hand-rolls an inverse-block cursor (as
 the editor and file-selector do), blinking at the shared `0x1FFF` cadence;
@@ -126,11 +129,11 @@ Hot bodies live in MAIN; cold bodies are paged to the **Saturn XLC bank**
 | GR graphics | `gr`, `grFull`, `text`, `color`, `plot`, `hlin`, `vlin`, `scrn` | grouped park overlay (GR group ~2.6 KB) |
 | Memory access | `peek`, `poke` (+ free speaker click) | small MAIN |
 | Timing | `wait(_ ms:)` | **Family B only** - Compiler/Runner (II+ and //e) + host. A delay is a program builtin, not a REPL one; each Runner = +86 B BSS paid by a 128 B heap trim. No REPL ships it |
-| Sound | `tone(_ halfPeriod:_ cycles:)` | **Family B only** - square-wave speaker tone, same residency as `wait()`. Each Runner = ~200 B BSS paid by a 256 B heap trim; the //e Compiler also took a 32 B stack-reserve trim. No REPL ships it (SWIFTSAT's MAIN, now 2 B, can't even fit the recognizer row, so SWIFTAUX was kept symmetric) |
+| Sound | `tone(_ halfPeriod:_ cycles:)` | **Family B only** - square-wave speaker tone, same residency as `wait()`. Each Runner = ~200 B BSS paid by a 256 B heap trim; the //e Compiler also took a 32 B stack-reserve trim. No REPL ships it (SWIFTSAT's MAIN, now 4 B, can't even fit the recognizer row, so SWIFTAUX was kept symmetric) |
 | Core builtin bodies | `print`/`readLine`/`min`/`max` relocated | +749 B SWIFTSAT MAIN reclaimed via XLC |
 | **80-column** `text80()` | //e firmware + II+ Videx | **//e: `SWIFTIIE` +315 B, `SWIFTAUX` +152 B**; II+ REPL path is `SWIFTSAT`, so it needs Saturn + Videx (~+183 B); flat II+ Family B Runner can drive Videx for program output; off = byte-identical |
 
-`SWIFTSAT` MAIN runs at **2 B** headroom - the platform parser table is
+`SWIFTSAT` MAIN runs at **4 B** headroom - the platform parser table is
 MAIN-resident (only helper bodies relocate), which is the wall the SWIFTAUX
 "packed directory" copy-down design was built around, and which forced the
 REPL cursor body into the XLC overlay (section 4).
@@ -169,9 +172,10 @@ program can get.
 
 | Feature | Cost | Notes |
 |---------|------|-------|
-| Compiler (`.swift` → `.swb`) | II+ 35,032 / //e aux 35,704 / Saturn 36,119 B | flat arena 1,834; aux/Saturn page completed functions |
-| Runner (runs `.swb`) | II+ 31,940 / //e 30,477 / Saturn 33,134 B | image buf 2,944 on flat II+ / heap 2,136, 2,560, 1,792 |
-| **Aux-paged bytecode** (//e Tier-3) | code ceiling ~2.9 KB → ~40 KB | 1 KB MAIN window + ROM AUXMOVE |
+| Compiler (`.swift` → `.swb`) | II+ 35,026 / //e 34,874 / //e aux 35,698 / Saturn 36,113 B | flat arena 1,834 (II+ and //e); aux/Saturn page completed functions |
+| Runner (runs `.swb`) | II+ 31,940 / //e 29,528 / //e aux 30,477 / Saturn 33,134 B | image buf 2,944 on both flat tiers / heap 2,136, 2,560, 2,560, 1,792 |
+| **//e flat Tier-1** (non-aux) | same flat caps as II+ Tier-1 | `WITH_IIE` native case + Runner firmware 80-col (`text80()` on a 1 KB 80-col card); no extended aux card needed |
+| **Aux-paged bytecode** (//e Tier-3) | code ceiling ~2.9 KB → ~40 KB | 1 KB MAIN window + ROM AUXMOVE; needs the 64 KB extended aux card |
 | **Saturn-paged bytecode** (II+ Tier-2) | similar | Saturn bank window |
 | `for-in` / `switch` (Int/Bool) / `random(in:)` | funded by dropping `array.c` (~1.5 KB) + arena slack | xorshift `random` is multiply-free |
 | File / directory CRUD builtins | unified host+Runner path | read/write/append/delete/rename/exists/createDir/deleteDir/listDirectory; `WITH_FILE_CRUD` keeps them out of the Compiler |

@@ -117,6 +117,42 @@ int test_compile_comparison(void) {
   return 0;
 }
 
+int test_compile_logical_ops(void) {
+  char buf[128];
+  /* Values. */
+  EXPECT(run_and_capture("print(true && true)\n", buf, sizeof(buf)) == 0, 1);
+  EXPECT(strcmp(buf, "true\n") == 0, 2);
+  EXPECT(run_and_capture("print(true && false)\n", buf, sizeof(buf)) == 0, 3);
+  EXPECT(strcmp(buf, "false\n") == 0, 4);
+  EXPECT(run_and_capture("print(false || true)\n", buf, sizeof(buf)) == 0, 5);
+  EXPECT(strcmp(buf, "true\n") == 0, 6);
+  EXPECT(run_and_capture("print(false || false)\n", buf, sizeof(buf)) == 0, 7);
+  EXPECT(strcmp(buf, "false\n") == 0, 8);
+  /* Precedence: && binds tighter than ||, comparison tighter than both.
+   * `false || true && false` == `false || (true && false)` == false. */
+  EXPECT(run_and_capture("print(false || true && false)\n",
+                         buf, sizeof(buf)) == 0, 9);
+  EXPECT(strcmp(buf, "false\n") == 0, 10);
+  EXPECT(run_and_capture("print(1 < 2 && 2 < 3)\n", buf, sizeof(buf)) == 0, 11);
+  EXPECT(strcmp(buf, "true\n") == 0, 12);
+  /* Short-circuit: the rhs side effect must NOT run when the lhs alone
+   * decides the result (`false &&`, `true ||`). */
+  EXPECT(run_and_capture(
+      "func s() -> Bool {\n  print(\"X\")\n  return true\n}\n"
+      "print(false && s())\n", buf, sizeof(buf)) == 0, 13);
+  EXPECT(strcmp(buf, "false\n") == 0, 14);
+  EXPECT(run_and_capture(
+      "func s() -> Bool {\n  print(\"X\")\n  return true\n}\n"
+      "print(true || s())\n", buf, sizeof(buf)) == 0, 15);
+  EXPECT(strcmp(buf, "true\n") == 0, 16);
+  /* ...and the rhs DOES run when the lhs leaves the result open. */
+  EXPECT(run_and_capture(
+      "func s() -> Bool {\n  print(\"X\")\n  return true\n}\n"
+      "print(true && s())\n", buf, sizeof(buf)) == 0, 17);
+  EXPECT(strcmp(buf, "X\ntrue\n") == 0, 18);
+  return 0;
+}
+
 int test_compile_var_reassignment(void) {
   char buf[64];
   EXPECT(run_and_capture("var n = 5\nn = n + 1\nprint(n)\n",
@@ -150,7 +186,7 @@ int test_compile_ident_too_long_is_error(void) {
   compiler_compile_source(src, (uint16_t)strlen(src), &cr);
   EXPECT(cr.err != SE_OK, 1);
   EXPECT(cr.err_msg != (const char *)0, 2);
-  EXPECT(strcmp(cr.err_msg, "name longer than 11 chars") == 0, 3);
+  EXPECT(strcmp(cr.err_msg, "name too long") == 0, 3);
   return 0;
 }
 
@@ -162,7 +198,7 @@ int test_compile_func_name_too_long_is_error(void) {
   compiler_compile_source(src, (uint16_t)strlen(src), &cr);
   EXPECT(cr.err != SE_OK, 1);
   EXPECT(cr.err_msg != (const char *)0, 2);
-  EXPECT(strcmp(cr.err_msg, "name longer than 11 chars") == 0, 3);
+  EXPECT(strcmp(cr.err_msg, "name too long") == 0, 3);
   return 0;
 }
 

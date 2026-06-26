@@ -127,9 +127,11 @@ Both tools are per-machine. The Runner needs `WITH_IIE` for its keyboard
 its `Compiling:` / `Wrote:` path echo, so it too is `WITH_IIE` on the //e
 (full-ASCII render) and pre-IIe on the II+/Saturn (inverse-letter render
 with the `WITH_INVERSE_JM` `J`/`M` fix - see
-[003](003-apple2-input-method.md)). There are three Compiler tiers, one
-per disk, differing in how much **source** they can handle: II+ Tier-1
-(flat), II+ Tier-2 (Saturn-paged), and //e Tier-3 (aux-paged). See
+[003](003-apple2-input-method.md)). There are three Compiler tiers,
+differing in how much code they can handle: II+ Tier-1 (flat), II+ Tier-2
+(Saturn-paged), and //e Tier-3 (aux-paged). Tier-1 ships on two disks — an
+II+ build and a //e-native flat build (`WITH_IIE` + firmware-80-col Runner,
+disk 021) — so four compiler disks in all. See
 [BUILDING.md](../BUILDING.md) for the disk/target matrix and
 [016](016-familyb-bigger-source.md) for the paging.
 

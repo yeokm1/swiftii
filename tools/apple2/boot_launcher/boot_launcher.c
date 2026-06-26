@@ -165,10 +165,22 @@ static const uint8_t fname_lite[] = {
 #define EXTRAS_LABEL  "//e aux 80-col"
 #define LITE_BANNER   "SwiftII //e"
 #define EXTRAS_BANNER "SwiftII //e aux"
-/* Family B (compiler disk) banner — machine-tagged like the others. */
+/* Family B (compiler disk) banner — machine-tagged like the others. Two //e
+ * compiler disks share this LITE_IIE launcher but ship different Compiler/Runner
+ * builds (flat Tier 1 vs aux-paged Tier 3) under the same filenames, so — like
+ * the II+/Saturn pair below — the aux disk gets its own launcher build,
+ * -DFAMILYB_AUX, which tags the banner "...//e aux". */
+#ifdef FAMILYB_AUX
+#define FAMILYB_BANNER "SwiftII Compiler //e aux"
+#else
 #define FAMILYB_BANNER "SwiftII Compiler //e"
+#endif
 /* Which disk this launcher was built for (Help / About). */
+#ifdef FAMILYB_AUX
+#define BUILD_NAME   "//e aux build"
+#else
 #define BUILD_NAME   "//e build"
+#endif
 #else
 static const uint8_t fname_lite[] = {
     15, 'S','W','I','F','T','I','I','P','.','S','Y','S','T','E','M'

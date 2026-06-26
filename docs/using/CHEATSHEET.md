@@ -25,7 +25,7 @@ true   false   nil   "a\(x)b"  // literals + interpolation; Int literals are dec
 ```text
 +  -  *  /  %            arithmetic (+ concatenates String)
 == != <  <= >  >=        comparison   (String ==  is identity, not content!)
-&& || !                  logical (short-circuit)
+&& || !                  logical (&& and || short-circuit)
 =  += -= *= /=           assignment (compound = x = x <op> y)
 ??   x!                  nil-coalesce · force-unwrap
 a..<b   a...b            half-open · closed range

@@ -48,7 +48,7 @@ make host
 
 ## 3. The inner dev loop
 
-**Test-first, host-first** (see AGENTS.md's "How we work" section). The four test
+**Test-first, host-first** (see AGENTS.md's "How we work" section). The five test
 layers and when to use each are in **[TESTING.md](../testing/TESTING.md)**; the fast
 path:
 
@@ -71,7 +71,7 @@ didn't blow the budget (`make size`) → `make ci` before you commit.
 ```sh
 make apple2-all         # all four REPL interpreters + launchers
 make apple2-familyb     # the Family B Compiler + Runner
-make disks              # the eight distribution .po images
+make disks              # the nine distribution .po images
 make run                # boot the II+ lite disk in an emulator
 ```
 
@@ -97,7 +97,7 @@ is the order that builds context fastest:
    - **[MEMORY_MAP.md](MEMORY_MAP.md)** - the Apple II address space, the
      ProDOS ceiling, the Saturn/aux paging.
 5. **[STYLE.md](STYLE.md)** - conventions; match the surrounding code.
-6. **[TESTING.md](../testing/TESTING.md)** - the four test layers in depth (you met
+6. **[TESTING.md](../testing/TESTING.md)** - the five test layers in depth (you met
    them in section 3).
 7. **[LESSONS.md](LESSONS.md)** - the hard-won gotchas. cc65 quirks,
    budget traps, "never do X" - skim it early, it will save you a day.

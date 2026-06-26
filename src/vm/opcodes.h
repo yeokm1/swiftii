@@ -260,8 +260,8 @@ typedef unsigned char op_t;
  * XLC table slot 20. */
 #define BUILTIN_GR_FULL   0x21
 /* GR line/read (XLC table slots 21-23). hlin/vlin
- * take two endpoints + an `at:`-labelled line coordinate (argc 3) and
- * draw a run in the current colour; scrn(x,y) reads the colour back
+ * take two endpoints + a positional line coordinate (argc 3) and draw a run
+ * in the current colour; scrn(x,y) reads the colour back
  * (0..15). y bounds follow the active gr/grFull mode, same as plot. */
 #define BUILTIN_HLIN      0x22
 #define BUILTIN_VLIN      0x23

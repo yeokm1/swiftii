@@ -58,7 +58,7 @@ static void parse_random(Parser *p) {
   parser_expect(p, TOK_LPAREN, ERR_EXPECTED_LPAREN);
   if (p->err) return;
   if (p->L.tok != TOK_IN) {            /* the `in:` argument label */
-    parser_fail(p, SE_BAD_OPCODE, "expected 'in:'");
+    parser_fail(p, SE_BAD_OPCODE, "want 'in:'");
     return;
   }
   lexer_next(&p->L);

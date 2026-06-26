@@ -8,9 +8,10 @@ Images are organised by version, one folder per release:
 ```
 releases/
   v1.0.0/   ← the eight .po images for that version
+  v1.0.1/   ← the nine .po images for that version
 ```
 
-`make release` builds the eight disks and stages them under
+`make release` builds the disks and stages them under
 `releases/v<version>/` (the version comes from
 [`src/common/version.h`](../src/common/version.h)). These per-version
 folders are committed to the repo — the `*.po` gitignore is exempted for
@@ -18,10 +19,38 @@ folders are committed to the repo — the `*.po` gitignore is exempted for
 **[GitHub Release](https://github.com/yeokm1/swiftii/releases)** (in the
 release *Assets*).
 
-## The eight-disk set
+## Release history
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| **v1.0.1** | 2026-06-26 | See notes below |
+| **v1.0.0** | 2026-06-25 | Initial public release |
+
+### v1.0.1 — 2026-06-26
+
+- Short-circuit `&&` / `||` logical operators.
+- New //e-native Family B compiler disk `swiftii-iie-compiler.po`: firmware
+  80-column + native lowercase for a //e **without** the 64 KB aux card (which
+  previously fell back to the II+ disk). The aux-paged //e disk is renamed
+  `swiftii-iie-aux-compiler.po`; the set grows from 8 to 9 disks.
+- The //e aux compiler disk now shows its own `SwiftII Compiler //e aux` banner.
+- Fixed the on-disk "Run tests" sweep filling the data disk: the Runner now
+  deletes each test's generated `.swb` after running it (in the test-sweep
+  auto-advance), so the outputs no longer pile up and exhaust the data disk's
+  free space partway through a full Family B sweep.
+
+### v1.0.0 — 2026-06-25
+
+- Initial public release: the SwiftII interpreter (immediate **REPL** + **file**
+  mode) and the Pascal-style **Family B** compiler/runner toolchain, with the
+  in-launcher editor, graphics / sound / memory built-ins, and 80-column support.
+  Eight-disk distribution spanning the Apple ][ / ][+, II+ + Saturn 128 K, //e,
+  and //e + 64 KB aux machines.
+
+## The nine-disk set
 
 Staged release images carry a `-v<version>` suffix (e.g.
-`swiftii-iip-lite-repl-v1.0.0.po`) so a single `.po` downloaded on its own
+`swiftii-iip-lite-repl-v1.0.1.po`) so a single `.po` downloaded on its own
 from a GitHub Release still names its version. The tables below list the
 canonical stem; append `-v<version>` for the actual filename.
 
@@ -32,15 +61,19 @@ canonical stem; append `-v<version>` for the actual filename.
 | `swiftii-iie-lite-repl.po` | any //e | REPL, core language |
 | `swiftii-iie-aux-repl.po` | //e with 64K aux | REPL + graphics / memory / speaker click + 80-col |
 | `swiftii-data.po` | any (drive 2) | non-boot data disk: full `SAMPLES/` + `TESTS/` |
-| `swiftii-iip-compiler.po` | ][+ | Family B compiler + runner (Tier 1) |
+| `swiftii-iip-compiler.po` | ][+ | Family B compiler + runner (Tier 1, II+) |
+| `swiftii-iie-compiler.po` | any //e | Family B (Tier 1, //e-native: firmware 80-col, no aux card needed) |
+| `swiftii-iie-aux-compiler.po` | //e with 64K aux | Family B (Tier 3, aux-paged) |
 | `swiftii-iip-sat-compiler.po` | ][+ Saturn | Family B (Tier 2, Saturn-paged) |
-| `swiftii-iie-compiler.po` | //e aux | Family B (Tier 3, aux-paged) |
 
-## v1.0.0 disk contents snapshot
+## v1.0.1 disk contents snapshot
 
-Current free-space figures are from `make disks check-readme` on
-2026-06-24. Every bootable disk carries `PRODOS`, `SWIFTII.SYSTEM`
-(launcher), `DEBUG.SYSTEM`, and `README.TXT` unless noted.
+Free-space figures are read by hand from the freshly built `.po` images
+(AppleCommander disk listing), captured 2026-06-26 — `make disks check-readme`
+verifies each disk's `README.TXT` and launcher banner, not its free bytes, so
+refresh these numbers from the build when the disk contents change. Every
+bootable disk carries `PRODOS`, `SWIFTII.SYSTEM` (launcher), `DEBUG.SYSTEM`, and
+`README.TXT` unless noted.
 
 | Image | Free bytes | Additional root payload |
 |-------|-----------:|-------------------------|
@@ -48,10 +81,11 @@ Current free-space figures are from `make disks check-readme` on
 | `swiftii-iip-sat-repl.po` | 12,800 | `SWIFTSAT.SYSTEM`, `SAMPLES/`, `XSAMPLES/` (extras staged-source samples only) |
 | `swiftii-iie-lite-repl.po` | 31,232 | `SWIFTIIE.SYSTEM`, `SAMPLES/` |
 | `swiftii-iie-aux-repl.po` | 14,336 | `SWIFTAUX.SYSTEM`, `SAMPLES/`, `XSAMPLES/` (extras staged-source samples only) |
-| `swiftii-data.po` | 22,528 | non-boot data disk: `SAMPLES/`, full `XSAMPLES/`, `TESTS/`, `TESTRUN.SYSTEM` |
+| `swiftii-data.po` | 19,968 | non-boot data disk: `SAMPLES/`, full `XSAMPLES/`, `TESTS/`, `TESTRUN.SYSTEM` |
 | `swiftii-iip-compiler.po` | 5,632 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
+| `swiftii-iie-compiler.po` | 8,704 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
+| `swiftii-iie-aux-compiler.po` | 7,168 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
 | `swiftii-iip-sat-compiler.po` | 3,584 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
-| `swiftii-iie-compiler.po` | 7,168 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
 
 Program-disk `SAMPLES/` is the portable set (`arrays`, `fib`, `fizzbuzz`,
 `functions`, `greet`, `optionals`, `strings`) except on compiler disks, where
@@ -75,7 +109,7 @@ Full step-by-step instructions are in the
 ## (Re)building a version folder
 
 ```sh
-make release    # builds the eight disks and stages them in releases/v<version>/
+make release    # builds the nine disks and stages them in releases/v<version>/
 ```
 
 The version comes from [`src/common/version.h`](../src/common/version.h) —
@@ -97,7 +131,7 @@ commit the new `releases/v<version>/` folder.
 > build), point the harness at this version folder:
 >
 > ```sh
-> make acceptance RELEASE=releases/v1.0.0 ARGS=--window
+> make acceptance RELEASE=releases/v1.0.1 ARGS=--window
 > ```
 >
 > The images are copied into `build/acceptance/` and run from there, so the

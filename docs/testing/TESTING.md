@@ -16,7 +16,7 @@ automated counterpart to the manual playbooks below.
 
 Sibling docs cover the on-target passes: the feature walk is split
 into [`TESTING-emulators.md`](TESTING-emulators.md) (the emulator
-pre-flight, all eight disks - now mostly automated by `make acceptance`) and
+pre-flight, all nine disks - now mostly automated by `make acceptance`) and
 [`TESTING-iiplus.md`](TESTING-iiplus.md)
 (the physical II+ acceptance gate), plus the exhaustive key-by-key matrix in
 [`TESTING-keyboard.md`](TESTING-keyboard.md) (every
@@ -92,10 +92,14 @@ Layout:
 
 ```
 tests/sim/
+  smoke_test.py       minimal py65 harness smoke test
   dispatch_test.py    runs canned bytecode, checks final stack/heap
   arith_test.py       multiply/divide correctness across ranges
   refcount_test.py    allocation patterns + leak detection
+  swiftaux_copydown_test.py
+                      SWIFTAUX aux copy-down dispatcher coverage
   helpers.py          shared py65 setup
+  runner.py           test discovery / runner
 ```
 
 Run with `make sim`.
@@ -125,6 +129,10 @@ tests/integration/
   ...
   026_system.swift
   026_system.expected
+  027_terminator_expr.swift
+  027_terminator_expr.expected
+  028_booleans.swift
+  028_booleans.expected
   800_fileio.swift
   800_fileio.expected
   ...
@@ -292,7 +300,7 @@ A single `make ci` invocation runs, in order:
 6. `make repl-test`    (host-superset REPL sessions; core plus host-testable extras)
 7. `make repl-test-iie` (//e/no-`WITH_SWB` REPL sessions and Family-A dialect rejection)
 8. `make apple2-all`   (all four Family A interpreters)
-9. `make apple2-familyb` (all three Family B Compiler/Runner tiers)
+9. `make apple2-familyb` (all Family B Compiler/Runner builds: 3 tiers, 4 disks — II+, //e non-aux, //e aux, Saturn)
 10. `make boot-launcher`
 11. `make size`        (memory and file-size budget check)
 12. `make disks` and `make disks-familyb`

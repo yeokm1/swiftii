@@ -1,0 +1,9 @@
+!true
+!false
+var ready: Bool = false
+ready = true
+print(ready)
+func negate(_ b: Bool) -> Bool { return !b }
+negate(true)
+negate(false)
+:quit

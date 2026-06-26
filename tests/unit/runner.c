@@ -54,6 +54,7 @@ extern int test_input_idempotent(void);
 extern int test_compile_demo_program(void);
 extern int test_compile_arithmetic(void);
 extern int test_compile_comparison(void);
+extern int test_compile_logical_ops(void);
 extern int test_compile_var_reassignment(void);
 extern int test_compile_let_is_immutable(void);
 extern int test_compile_undeclared_var_is_error(void);
@@ -323,6 +324,7 @@ int main(void) {
   RUN(test_compile_demo_program);
   RUN(test_compile_arithmetic);
   RUN(test_compile_comparison);
+  RUN(test_compile_logical_ops);
   RUN(test_compile_var_reassignment);
   RUN(test_compile_let_is_immutable);
   RUN(test_compile_undeclared_var_is_error);

@@ -50,8 +50,8 @@ def _resolve_disk(disk_dir: Path, name: str) -> Path:
 
     Fresh build/disk/ images are un-versioned (swiftii-iip-lite-repl.po), but
     `make release` stages copies with a -v<version> suffix
-    (swiftii-iip-lite-repl-v1.0.0.po). When the exact name is absent, fall back
-    to a single <stem>-v*.po match so `RELEASE=releases/v1.0.0` still works.
+    (swiftii-iip-lite-repl-v1.0.1.po). When the exact name is absent, fall back
+    to a single <stem>-v*.po match so `RELEASE=releases/v1.0.1` still works.
     """
     exact = disk_dir / name
     if exact.exists():
@@ -91,13 +91,16 @@ CONFIGS: list[Config] = [
     # The user-facing oversize showcases (XSAMPLES/) on each Family B tier — the
     # TESTRUN compiler sweep (further down) runs TESTS/, not SAMPLES/, so this is
     # the only automated proof that xbig/xgrdemo/xfuncs compile+run where each
-    # disk is meant to: xbig+xgrdemo on all three tiers, xfuncs paged-only (the
-    # flat II+ disk rejects it by design). [X]-runs each in the file browser.
+    # disk is meant to: xbig+xgrdemo on every tier, xfuncs paged-only (the two
+    # FLAT disks — II+ and the //e-native non-aux — reject it by design). [X]-runs
+    # each in the file browser.
     Config("samples", "iip", "swiftii-iip-compiler.po", "disk-iip-compiler",
            "samples_flat"),
     Config("samples-sat", "sat", "swiftii-iip-sat-compiler.po", "disk-iip-sat-compiler",
            "samples_paged"),
     Config("samples-iie", "iie", "swiftii-iie-compiler.po", "disk-iie-compiler",
+           "samples_flat"),
+    Config("samples-iie-aux", "iienh", "swiftii-iie-aux-compiler.po", "disk-iie-aux-compiler",
            "samples_paged"),
     # II+ digraph + case typing through the real editor: every C-digraph and
     # both case markers, the on-screen rendering as they're typed + after a
@@ -134,6 +137,8 @@ CONFIGS: list[Config] = [
     Config("compiler-sat", "sat", "swiftii-iip-sat-compiler.po", "disk-iip-sat-compiler",
            "sweep_fb"),
     Config("compiler-iie", "iie", "swiftii-iie-compiler.po", "disk-iie-compiler", "sweep_fb"),
+    Config("compiler-iie-aux", "iienh", "swiftii-iie-aux-compiler.po", "disk-iie-aux-compiler",
+           "sweep_fb"),
     # The deliberately-failing ERRTESTS demos (TESTS/ERRTESTS/, datadisk): each
     # is meant to error, so the TESTRUN.SYSTEM 'Run tests' sweep skips them. This config
     # runs them by hand on a II+ Family B compiler disk ([X] in the file browser)
@@ -2262,7 +2267,7 @@ def main() -> int:
     ap.add_argument("--workdir", default=None)
     ap.add_argument("--disk-dir", default=None,
                     help="run against pre-built disk images in this directory "
-                         "(e.g. releases/v1.0.0) instead of building fresh from "
+                         "(e.g. releases/v1.0.1) instead of building fresh from "
                          "source; the make targets are skipped. The images are "
                          "copied into the workdir per config and run from there, "
                          "so the originals are never modified")

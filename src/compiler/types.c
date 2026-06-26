@@ -99,7 +99,7 @@ ctype_t parse_type(Parser *p) {
     lexer_next(&p->L);
   }
   if (p->L.tok != TOK_IDENT) {
-    parser_fail(p, SE_BAD_OPCODE, "expected type");
+    parser_fail(p, SE_BAD_OPCODE, "want type");
     return CT_UNKNOWN;
   }
   base = base_type_from_span(p->L.src, p->L.tok_pos, p->L.tok_len);
@@ -107,17 +107,17 @@ ctype_t parse_type(Parser *p) {
   if (is_array) {
     if (p->L.tok == TOK_QUESTION) {
       /* [T?] not representable in the 1-byte ctype encoding. */
-      parser_fail(p, SE_BAD_OPCODE, "unsupported type");
+      parser_fail(p, SE_BAD_OPCODE, "bad type");
       return CT_UNKNOWN;
     }
     if (p->L.tok != TOK_RBRACKET) {
-      parser_fail(p, SE_BAD_OPCODE, "expected ']'");
+      parser_fail(p, SE_BAD_OPCODE, "want ']'");
       return CT_UNKNOWN;
     }
     lexer_next(&p->L);
     if (p->L.tok == TOK_QUESTION) {
       /* [T]? not representable in the 1-byte ctype encoding. */
-      parser_fail(p, SE_BAD_OPCODE, "unsupported type");
+      parser_fail(p, SE_BAD_OPCODE, "bad type");
       return CT_UNKNOWN;
     }
     if (base == CT_UNKNOWN) return CT_ARR_UNKNOWN;

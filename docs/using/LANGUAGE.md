@@ -22,7 +22,7 @@ Invoked with no arguments:
 
 ```
 ] -SWIFTIIP
-SwiftII ][+ 1.0.0
+SwiftII ][+ 1.0.1
 Type :help :list :quit
 > let name = "Woz"
 > print("Hello, \(name)!")
@@ -322,10 +322,10 @@ In precedence order, lowest to highest:
 
 ```
 =                                           assignment
-??                                          nil-coalescing
 ||                                          logical or
 &&                                          logical and
 == !=                                       equality
+??                                          nil-coalescing
 < <= > >=                                   comparison
 + -                                         additive (binary)
 * / %                                       multiplicative
@@ -336,6 +336,21 @@ In precedence order, lowest to highest:
 
 `=` is a statement, not an expression - `let x = (y = 1)` is a syntax
 error, by design.
+
+`&&`, `||`, and `??` short-circuit: the right-hand side is evaluated
+only when the left-hand side doesn't already decide the result. So `b`
+runs only if `a` is true in `a && b`, only if `a` is false in `a || b`,
+and only if `a` is nil in `a ?? b`. `&&` and `||` take `Bool` operands
+and produce a `Bool`; use prefix `!` to negate. (Like the rest of
+SwiftII's lightweight typing this is best-effort: the left operand is
+checked at run time, but a non-`Bool` right operand on the evaluated
+path passes through unchecked — keep both sides `Bool`.)
+
+```swift
+if a > 0 && b > 0 { foo() }
+if a == 1 || b == 1 { foo() }
+let name = maybeName ?? "anon"
+```
 
 ### Ranges
 

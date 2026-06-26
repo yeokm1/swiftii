@@ -10,8 +10,8 @@
 #   boot-launcher  cc65 + ca65 boot selector (produces build/boot_launcher/
 #              SWIFTII; the .po installs it as SWIFTII.SYSTEM so ProDOS
 #              auto-launches it — see docs/contributing/LESSONS.md 2026-05-25)
-#   disks      build the 8-disk set: four REPL program disks,
-#              three Family B compiler disks, and disk-data
+#   disks      build the 9-disk set: four REPL program disks,
+#              four Family B compiler disks, and disk-data
 #   run        launch the emulator on the II+ lite image (broadest compat)
 #   run-sat/iie/aux  launch the Saturn / //e-lite / //e-aux image
 #   run-aux    launch the emulator on the //e-aux image (SWIFTAUX)
@@ -636,15 +636,26 @@ apple2-iie: $(A2IIE_SYSTEM_BIN)
 A2COMP_DIR   := $(A2_DIR)/compiler
 A2COMP_BIN   := $(A2COMP_DIR)/COMPILER.SYSTEM
 A2COMP_MAP   := $(A2COMP_DIR)/compiler.map
+# //e Tier-1 (non-aux): flat Compiler/Runner with the //e-native render path
+# (WITH_IIE) + firmware 80-col Runner, but NO aux paging — runs on any //e,
+# including one with just the 1K 80-Column Text Card (no extended aux required).
 A2IIECOMP_DIR := $(A2COMP_DIR)/iie
 A2IIECOMP_BIN := $(A2IIECOMP_DIR)/COMPILER.SYSTEM
 A2IIECOMP_MAP := $(A2IIECOMP_DIR)/compiler.map
+# //e Tier-3 (aux): WITH_AUX_COMPILE / WITH_AUX_BC, bytecode paged into the 64K
+# extended aux card.
+A2IIEAUXCOMP_DIR := $(A2COMP_DIR)/iie-aux
+A2IIEAUXCOMP_BIN := $(A2IIEAUXCOMP_DIR)/COMPILER.SYSTEM
+A2IIEAUXCOMP_MAP := $(A2IIEAUXCOMP_DIR)/compiler.map
 A2RUN_DIR    := $(A2_DIR)/runner
 A2RUN_BIN    := $(A2RUN_DIR)/RUNNER.SYSTEM
 A2RUN_MAP    := $(A2RUN_DIR)/runner.map
 A2IIERUN_DIR := $(A2RUN_DIR)/iie
 A2IIERUN_BIN := $(A2IIERUN_DIR)/RUNNER.SYSTEM
 A2IIERUN_MAP := $(A2IIERUN_DIR)/runner.map
+A2IIEAUXRUN_DIR := $(A2RUN_DIR)/iie-aux
+A2IIEAUXRUN_BIN := $(A2IIEAUXRUN_DIR)/RUNNER.SYSTEM
+A2IIEAUXRUN_MAP := $(A2IIEAUXRUN_DIR)/runner.map
 # Tier 2 (II+ Saturn 128K): paged Compiler/Runner that park bytecode in Saturn
 # banks instead of aux ($D000 window via saturn_bc.s).
 A2SATCOMP_DIR := $(A2COMP_DIR)/sat
@@ -695,7 +706,7 @@ RUNNER_SRC := \
 # bcwin.c is the MAIN window + backing-store glue, runner_aux.s is
 # the ROM-AUXMOVE driver. Both are aux-only — linking them into the II+ Runner
 # would pull unresolved aux symbols, so they go in the //e list alone.
-RUNNER_IIE_SRC := $(RUNNER_SRC) src/vm/bcwin.c src/common/aux_store.c \
+RUNNER_IIEAUX_SRC := $(RUNNER_SRC) src/vm/bcwin.c src/common/aux_store.c \
                   src/platform/apple2/aux_bc.s
 
 # The Compiler's source window lives in low RAM $0C00-$1BFF (4 KB, not BSS —
@@ -799,7 +810,7 @@ $(A2COMP_BIN): $(A2_CRT0) $(COMPILER_SRC) src/platform/apple2/swiftii-compiler.c
 # FILE_BC_SIZE (1,834 B window = max top-level scratch + largest single
 # function) to AUX_BC_MAX. Adds the shared aux store + ROM-AUXMOVE driver.
 # Links the same compiler cfg; the II+ Compiler stays the flat baseline.
-COMPILER_IIE_SRC := $(COMPILER_SRC) src/common/aux_store.c \
+COMPILER_IIEAUX_SRC := $(COMPILER_SRC) src/common/aux_store.c \
                     src/platform/apple2/aux_bc.s
 # WITH_AUX_COMPILE adds ~807 B of CODE (windowing + flush + paged swb write),
 # which the at-budget Compiler can't absorb at the flat 1,834 B window. But the
@@ -810,7 +821,7 @@ COMPILER_IIE_SRC := $(COMPILER_SRC) src/common/aux_store.c \
 # top-level-scratch ceiling drops to 896 B, but total compiled CODE rises to
 # AUX_BC_MAX (~36 KB) for function-heavy programs — the Tier 3 trade. (A
 # top-level-heavy program >896 B uses Tier 1.)
-COMPILER_IIE_DEFS := -DWITH_SWB -DWITH_BIGLANG -DWITH_RANDOM -DNO_ARRAY_RUNTIME \
+COMPILER_IIEAUX_DEFS := -DWITH_SWB -DWITH_BIGLANG -DWITH_RANDOM -DNO_ARRAY_RUNTIME \
   -DFILE_SRC_SIZE=4096 -DFILE_BC_SIZE=896 -DHEAP_SIZE=744 \
   -DMAX_GLOBALS=48 -DMAX_FUNCS=24 -DWITH_AUX_COMPILE
 # -DWITH_IIE selects screen.c's //e render path (emit_native_high + cputc, full
@@ -824,16 +835,34 @@ COMPILER_IIE_DEFS := -DWITH_SWB -DWITH_BIGLANG -DWITH_RANDOM -DNO_ARRAY_RUNTIME 
 # firmware arm overflows this at-budget binary by ~194 B, and the Compiler — a
 # transient tool that comes up in 40-col text after the chain — never needed
 # 80-col (it ran 40-col before this change too; only its render path moves).
-$(A2IIECOMP_BIN): $(A2_CRT0) $(COMPILER_IIE_SRC) src/platform/apple2/swiftii-compiler.cfg $(A2_DATE_STAMP) | $(A2COMP_BIN)
+$(A2IIEAUXCOMP_BIN): $(A2_CRT0) $(COMPILER_IIEAUX_SRC) src/platform/apple2/swiftii-compiler.cfg $(A2_DATE_STAMP) | $(A2IIECOMP_BIN)
+	@mkdir -p $(A2IIEAUXCOMP_DIR)
+	$(CL65) $(CL65FLAGS) $(COMPILER_IIEAUX_DEFS) -DWITH_IIE \
+	  -C src/platform/apple2/swiftii-compiler.cfg \
+	  -o $@ -m $(A2IIEAUXCOMP_MAP) \
+	  $(A2_CRT0) $(COMPILER_IIEAUX_SRC)
+	@find src -name '*.o' -delete
+
+# //e Tier-1 (non-aux) Compiler: the flat baseline Compiler (same COMPILER_SRC,
+# flat FILE_BC_SIZE=1834 — no aux store / aux_bc.s), but built for the //e with
+# -DWITH_IIE so it renders its "Compiling:" / "Wrote:" echo via the //e native
+# char ROM instead of the pre-IIe inverse-letter path. WITH_IIE DROPS
+# emit_inverse_letter + the digraph branches, so this is actually SMALLER than
+# the II+ Compiler (which carries WITH_INVERSE_JM) — it fits the flat budget with
+# room to spare. Filter WITH_INVERSE_JM out of COMPILER_DEFS: the cputc J/M
+# collision it patches only exists on the pre-IIe render path WITH_IIE replaces.
+# Like the //e aux Compiler it stays 40-col (no IIE_80COL_DEF) — a transient tool.
+COMPILER_IIE_DEFS := $(filter-out -DWITH_INVERSE_JM,$(COMPILER_DEFS))
+$(A2IIECOMP_BIN): $(A2_CRT0) $(COMPILER_SRC) src/platform/apple2/swiftii-compiler.cfg $(A2_DATE_STAMP) | $(A2COMP_BIN)
 	@mkdir -p $(A2IIECOMP_DIR)
 	$(CL65) $(CL65FLAGS) $(COMPILER_IIE_DEFS) -DWITH_IIE \
 	  -C src/platform/apple2/swiftii-compiler.cfg \
 	  -o $@ -m $(A2IIECOMP_MAP) \
-	  $(A2_CRT0) $(COMPILER_IIE_SRC)
+	  $(A2_CRT0) $(COMPILER_SRC)
 	@find src -name '*.o' -delete
 
 .PHONY: apple2-compiler
-apple2-compiler: $(A2COMP_BIN) $(A2IIECOMP_BIN)
+apple2-compiler: $(A2COMP_BIN) $(A2IIECOMP_BIN) $(A2IIEAUXCOMP_BIN)
 
 $(A2RUN_BIN): $(A2_CRT0) $(RUNNER_SRC) src/platform/apple2/swiftii-runner.cfg $(A2_DATE_STAMP) | $(A2COMP_BIN)
 	@mkdir -p $(A2RUN_DIR)
@@ -847,21 +876,39 @@ $(A2RUN_BIN): $(A2_CRT0) $(RUNNER_SRC) src/platform/apple2/swiftii-runner.cfg $(
 	  $(A2_CRT0) $(RUNNER_SRC)
 	@find src -name '*.o' -delete
 
+# //e Tier-1 (non-aux) Runner: the flat Runner (same RUNNER_SRC, whole .swb
+# loaded into the 2,944 B MAIN buffer — no aux window / bcwin.c / aux_bc.s), but
+# built for the //e: -DWITH_IIE for native case rendering and IIE_80COL_DEF for
+# the //e FIRMWARE 80-col arm (so a program's text80() works on a //e with the
+# 1K 80-Column Text Card; harmless on a bare //e if unused). This is the //e
+# counterpart of the II+ flat Runner ($A2RUN_BIN) — it has NO Videx code and NO
+# aux paging. RUNNER_IIE_DEFS keeps the full RUNNER_DEFS heap (2560); if the
+# firmware 80-col arm pushes BSS over the ceiling, trim it here with the same
+# patsubst lever RUNNER_IIP_DEFS uses (stays well above the 2 KB heap floor).
+RUNNER_IIE_DEFS := $(RUNNER_DEFS)
+$(A2IIERUN_BIN): $(A2_CRT0) $(RUNNER_SRC) src/platform/apple2/swiftii-runner.cfg $(A2_DATE_STAMP) | $(A2RUN_BIN)
+	@mkdir -p $(A2IIERUN_DIR)
+	$(CL65) $(CL65FLAGS) $(RUNNER_IIE_DEFS) -DWITH_IIE $(IIE_80COL_DEF) \
+	  -C src/platform/apple2/swiftii-runner.cfg \
+	  -o $@ -m $(A2IIERUN_MAP) \
+	  $(A2_CRT0) $(RUNNER_SRC)
+	@find src -name '*.o' -delete
+
 # AUX_BC_DEFS: page the program bytecode into aux RAM so the
 # program-size ceiling is the ~40 KB aux park, not the MAIN .swb image. The
 # 1 KB window + 512 B stage chunk + 1 KB tail replace the (now removed)
 # ~2.9 KB s_image, so MAIN BSS nets out roughly even — confirm via `make size`.
 AUX_BC_DEFS := -DWITH_AUX_BC -DBC_WINDOW=1024 -DSWB_TAIL_CAP=1024
-$(A2IIERUN_BIN): $(A2_CRT0) $(RUNNER_IIE_SRC) src/platform/apple2/swiftii-runner.cfg $(A2_DATE_STAMP) | $(A2RUN_BIN)
-	@mkdir -p $(A2IIERUN_DIR)
+$(A2IIEAUXRUN_BIN): $(A2_CRT0) $(RUNNER_IIEAUX_SRC) src/platform/apple2/swiftii-runner.cfg $(A2_DATE_STAMP) | $(A2IIERUN_BIN)
+	@mkdir -p $(A2IIEAUXRUN_DIR)
 	$(CL65) $(CL65FLAGS) $(RUNNER_DEFS) $(AUX_BC_DEFS) -DWITH_IIE $(IIE_80COL_DEF) \
 	  -C src/platform/apple2/swiftii-runner.cfg \
-	  -o $@ -m $(A2IIERUN_MAP) \
-	  $(A2_CRT0) $(RUNNER_IIE_SRC)
+	  -o $@ -m $(A2IIEAUXRUN_MAP) \
+	  $(A2_CRT0) $(RUNNER_IIEAUX_SRC)
 	@find src -name '*.o' -delete
 
 .PHONY: apple2-runner
-apple2-runner: $(A2RUN_BIN) $(A2IIERUN_BIN)
+apple2-runner: $(A2RUN_BIN) $(A2IIERUN_BIN) $(A2IIEAUXRUN_BIN)
 
 # ------ Tier 2: II+ Saturn paged Compiler + Runner ------
 #
@@ -884,7 +931,7 @@ COMPILER_SAT_SRC := $(COMPILER_SRC) src/common/aux_store.c \
 COMPILER_SAT_DEFS := -DWITH_SWB -DWITH_BIGLANG -DWITH_RANDOM -DNO_ARRAY_RUNTIME \
   -DFILE_SRC_SIZE=4096 -DFILE_BC_SIZE=640 -DHEAP_SIZE=704 \
   -DMAX_GLOBALS=48 -DMAX_FUNCS=24 -DWITH_AUX_COMPILE -DBC_STORE_SATURN -DWITH_INVERSE_JM
-$(A2SATCOMP_BIN): $(A2_CRT0) $(COMPILER_SAT_SRC) src/platform/apple2/swiftii-compiler.cfg $(A2_DATE_STAMP) | $(A2IIECOMP_BIN)
+$(A2SATCOMP_BIN): $(A2_CRT0) $(COMPILER_SAT_SRC) src/platform/apple2/swiftii-compiler.cfg $(A2_DATE_STAMP) | $(A2IIEAUXCOMP_BIN)
 	@mkdir -p $(A2SATCOMP_DIR)
 	$(CL65) $(CL65FLAGS) $(COMPILER_SAT_DEFS) \
 	  -C src/platform/apple2/swiftii-compiler.cfg \
@@ -907,11 +954,11 @@ RUNNER_SAT_SRC := $(RUNNER_SRC) src/vm/bcwin.c src/common/aux_store.c \
 RUNNER_SAT_DEFS := -DWITH_SWB -DWITH_RANDOM -DWITH_FILE_CRUD -DWITH_TESTLOG -DUSERFILE_READ_CAP=512 \
   -DWITH_INVERSE_JM -DWITH_GR_TEXTWIN -DFILE_BC_SIZE=1 -DHEAP_SIZE=1792 -DMAX_GLOBALS=48 -DMAX_FUNCS=24 \
   -DWITH_AUX_BC -DBC_STORE_SATURN -DBC_WINDOW=512 -DSWB_TAIL_CAP=1024
-$(A2SATRUN_BIN): $(A2_CRT0) $(RUNNER_SAT_SRC) src/platform/apple2/swiftii-runner.cfg $(A2_DATE_STAMP) | $(A2IIERUN_BIN)
+$(A2SATRUN_BIN): $(A2_CRT0) $(RUNNER_SAT_SRC) src/platform/apple2/swiftii-runner.cfg $(A2_DATE_STAMP) | $(A2IIEAUXRUN_BIN)
 	@mkdir -p $(A2SATRUN_DIR)
 	@# II+ Saturn Runner also gets the Videx (track-B) 80-col arm. Its windowed
 	@# bytecode path (BC_WINDOW=512) leaves enough BSS that the Videx code fits
-	@# at the existing heap (3328) — no further trim needed. text80()/text() are
+	@# at the existing heap (1792) — no further trim needed. text80()/text() are
 	@# program opt-in; the Videoterm is independent of the Saturn program store.
 	$(CL65) $(CL65FLAGS) $(RUNNER_SAT_DEFS) $(VIDEX_80COL_DEF) \
 	  -C src/platform/apple2/swiftii-runner.cfg \
@@ -923,7 +970,8 @@ $(A2SATRUN_BIN): $(A2_CRT0) $(RUNNER_SAT_SRC) src/platform/apple2/swiftii-runner
 apple2-saturn-familyb: $(A2SATCOMP_BIN) $(A2SATRUN_BIN)
 
 .PHONY: apple2-familyb
-apple2-familyb: $(A2COMP_BIN) $(A2IIECOMP_BIN) $(A2RUN_BIN) $(A2IIERUN_BIN) \
+apple2-familyb: $(A2COMP_BIN) $(A2IIECOMP_BIN) $(A2IIEAUXCOMP_BIN) \
+                $(A2RUN_BIN) $(A2IIERUN_BIN) $(A2IIEAUXRUN_BIN) \
                 $(A2SATCOMP_BIN) $(A2SATRUN_BIN)
 
 # ------ SWIFTSAT build paths ------
@@ -1134,6 +1182,15 @@ BOOT_LAUNCHER_IIE_BIN := $(BOOT_LAUNCHER_DIR)/iie/SWIFTII
 BOOT_LAUNCHER_IIE_MAP := $(BOOT_LAUNCHER_DIR)/iie/boot_launcher.map
 BOOT_LAUNCHER_IIE_LBL := $(BOOT_LAUNCHER_DIR)/iie/boot_launcher.lbl
 
+# The //e AUX compiler disk's launcher (-DLITE_IIE -DFAMILYB_AUX). Same //e build
+# as BOOT_LAUNCHER_IIE_BIN, but tags the Family B banner "...//e aux" so it
+# differs from the non-aux //e compiler disk, whose COMPILER.SYSTEM has the same
+# filename and so can't be told apart at run time (the //e analogue of the
+# II+/Saturn split below).
+BOOT_LAUNCHER_IIE_AUX_BIN := $(BOOT_LAUNCHER_DIR)/iie-aux/SWIFTII
+BOOT_LAUNCHER_IIE_AUX_MAP := $(BOOT_LAUNCHER_DIR)/iie-aux/boot_launcher.map
+BOOT_LAUNCHER_IIE_AUX_LBL := $(BOOT_LAUNCHER_DIR)/iie-aux/boot_launcher.lbl
+
 # The II+ Saturn compiler disk's launcher (-DFAMILYB_SATURN). Same II+ build as
 # BOOT_LAUNCHER_BIN (no LITE_IIE), but tags the Family B banner "...][+ Saturn"
 # so it differs from the flat II+ compiler disk, whose COMPILER.SYSTEM has the
@@ -1143,7 +1200,7 @@ BOOT_LAUNCHER_SAT_MAP := $(BOOT_LAUNCHER_DIR)/sat/boot_launcher.map
 BOOT_LAUNCHER_SAT_LBL := $(BOOT_LAUNCHER_DIR)/sat/boot_launcher.lbl
 
 .PHONY: boot-launcher
-boot-launcher: $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_SAT_BIN)
+boot-launcher: $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_IIE_AUX_BIN) $(BOOT_LAUNCHER_SAT_BIN)
 
 # ---------------------------------------------------------------------------
 # DEBUG.SYSTEM — the standalone detection diagnostic the boot
@@ -1185,7 +1242,7 @@ TESTRUN_SYS_BIN := $(TESTRUN_SYS_DIR)/TESTRUN.SYSTEM
 # under `make -j` (same guard the //e launcher uses on the II+ launcher).
 $(TESTRUN_SYS_BIN): tools/apple2/testrun_sys/testrun.c tools/apple2/boot_launcher/boot_launcher_asm.s \
                     tools/apple2/testrun_sys/testrun.cfg $(A2_CRT0) src/common/config.h $(A2_DATE_STAMP) \
-                    | $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_SAT_BIN)
+                    | $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_IIE_AUX_BIN) $(BOOT_LAUNCHER_SAT_BIN)
 	@mkdir -p $(TESTRUN_SYS_DIR)
 	$(CL65) -t apple2 -O -Cl \
 	  -C tools/apple2/testrun_sys/testrun.cfg \
@@ -1248,6 +1305,31 @@ $(BOOT_LAUNCHER_IIE_BIN): tools/apple2/boot_launcher/boot_launcher.c \
 	@find tools/apple2/boot_launcher -maxdepth 1 -name '*.o' -delete
 	@find src -name '*.o' -delete
 
+# //e AUX-compiler-disk launcher (-DLITE_IIE -DFAMILYB_AUX -> banner "...//e aux").
+# Identical to the //e launcher above plus FAMILYB_AUX, which only swaps a banner
+# string. Order-only on the other launcher bins so the shared src/*.o +
+# boot_launcher_asm.o scratch don't race under `make -j`.
+$(BOOT_LAUNCHER_IIE_AUX_BIN): tools/apple2/boot_launcher/boot_launcher.c \
+                      tools/apple2/boot_launcher/boot_launcher_asm.s \
+                      $(BOOT_LAUNCHER_EDITOR_SRC) \
+                      $(A2_SHARED_SRC) $(BOOT_LAUNCHER_IO_SRC) \
+                      $(A2_CRT0) \
+                      tools/apple2/boot_launcher/boot_launcher.cfg \
+                      $(A2_DATE_STAMP) | $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN)
+	@mkdir -p $(dir $@)
+	$(CL65) -t apple2 -O -Cl -DLITE_IIE --asm-define LITE_IIE -DFAMILYB_AUX -DWITH_EDITOR -DWITH_SWB -DCC65_VER_STR='"$(CC65_VERSION)"' \
+	  -C tools/apple2/boot_launcher/boot_launcher.cfg \
+	  -o $@ \
+	  -m $(BOOT_LAUNCHER_IIE_AUX_MAP) \
+	  -Ln $(BOOT_LAUNCHER_IIE_AUX_LBL) \
+	  $(A2_CRT0) \
+	  tools/apple2/boot_launcher/boot_launcher.c \
+	  tools/apple2/boot_launcher/boot_launcher_asm.s \
+	  $(BOOT_LAUNCHER_EDITOR_SRC) \
+	  $(A2_SHARED_SRC) $(BOOT_LAUNCHER_IO_SRC)
+	@find tools/apple2/boot_launcher -maxdepth 1 -name '*.o' -delete
+	@find src -name '*.o' -delete
+
 # II+ Saturn-compiler-disk launcher (-DFAMILYB_SATURN -> banner "...][+ Saturn").
 # Otherwise identical to the II+ launcher (no LITE_IIE; the flag only swaps a
 # banner string, so no --asm-define). Order-only on the other launcher bins so
@@ -1258,7 +1340,7 @@ $(BOOT_LAUNCHER_SAT_BIN): tools/apple2/boot_launcher/boot_launcher.c \
                       $(A2_SHARED_SRC) $(BOOT_LAUNCHER_IO_SRC) \
                       $(A2_CRT0) \
                       tools/apple2/boot_launcher/boot_launcher.cfg \
-                      $(A2_DATE_STAMP) | $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN)
+                      $(A2_DATE_STAMP) | $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_IIE_AUX_BIN)
 	@mkdir -p $(dir $@)
 	$(CL65) -t apple2 -O -Cl -DFAMILYB_SATURN -DWITH_EDITOR -DWITH_SWB -DCC65_VER_STR='"$(CC65_VERSION)"' \
 	  -C tools/apple2/boot_launcher/boot_launcher.cfg \
@@ -1287,8 +1369,8 @@ $(BOOT_LAUNCHER_SAT_BIN): tools/apple2/boot_launcher/boot_launcher.c \
 # ---------------------------------------------------------------------------
 # Disk image set (ProDOS 2.4.3 .po)
 #
-# SwiftII ships an EIGHT-DISK distribution: four single-interpreter REPL
-# program disks, three Family B compiler program disks, and one non-boot DATA
+# SwiftII ships a NINE-DISK distribution: four single-interpreter REPL
+# program disks, four Family B compiler program disks, and one non-boot DATA
 # disk. Each REPL program disk carries the boot launcher (auto-launched as
 # SWIFTII.SYSTEM) + exactly ONE interpreter; each compiler disk carries the
 # launcher + Compiler + matching Runner. One binary per disk (rather than
@@ -1299,9 +1381,13 @@ $(BOOT_LAUNCHER_SAT_BIN): tools/apple2/boot_launcher/boot_launcher.c \
 #   disk-iip-sat-repl   swiftii-iip-sat-repl.po   II+ launcher + SWIFTSAT  (Saturn 128K extras)
 #   disk-iie-lite-repl  swiftii-iie-lite-repl.po  //e launcher + SWIFTIIE  (//e native case)
 #   disk-iie-aux-repl   swiftii-iie-aux-repl.po   //e launcher + SWIFTAUX  (//e 64K-aux extras)
+#   disk-iip-compiler      swiftii-iip-compiler.po       II+ launcher + flat Compiler/Runner   (Tier 1, any II+)
+#   disk-iie-compiler      swiftii-iie-compiler.po       //e launcher + //e flat Compiler/Runner (Tier 1, any //e, fw 80-col)
+#   disk-iie-aux-compiler  swiftii-iie-aux-compiler.po   //e launcher + aux-paged Compiler/Runner (Tier 3, //e 64K aux)
+#   disk-iip-sat-compiler  swiftii-iip-sat-compiler.po   II+ launcher + Saturn-paged Compiler/Runner (Tier 2, II+ Saturn)
 #   disk-data      swiftii-data.po      samples + on-disk TESTS/ (non-boot, drive 2)
 #
-# `make disks` builds all eight. The demo SAMPLES/ ALSO ship on each program disk
+# `make disks` builds all nine. The demo SAMPLES/ ALSO ship on each program disk
 # (so a single-drive user has runnable examples without the data disk); the
 # dev-facing TESTS/ stay on the data disk only (they would fill the tight
 # iip-sat image). A user authors new programs with the browser's [F] new-file,
@@ -1317,7 +1403,13 @@ PO_IMAGE_DATA := $(DISK_DIR)/swiftii-data.po
 # (+ in-process editor) + the shared Compiler + the per-machine Runner, no REPL
 # interpreter. doc 015.
 PO_IIP_COMP := $(DISK_DIR)/swiftii-iip-compiler.po
+# //e Tier-1 (non-aux): the //e-native flat Compiler/Runner — WITH_IIE rendering
+# + firmware 80-col Runner, NO aux paging — for a //e without the 64K extended
+# aux card (incl. a plain 1K 80-Column Text Card machine).
 PO_IIE_COMP := $(DISK_DIR)/swiftii-iie-compiler.po
+# //e Tier-3 (aux): the aux-paged Compiler/Runner — needs the //e 64K extended
+# 80-col (aux) card; lifts the program ceiling past the flat 1,834 B cap.
+PO_IIE_AUXCOMP := $(DISK_DIR)/swiftii-iie-aux-compiler.po
 # Tier 2 (II+ Saturn 128K): same II+ launcher, but the SATURN-paged Compiler +
 # Runner (Saturn banks back the bytecode store), so big programs compile + run
 # past the flat 1,834 B cap on a Saturn machine.
@@ -1392,9 +1484,9 @@ TEST_SWIFTS := $(wildcard datadisk/tests/core/*.swift) \
                $(wildcard datadisk/tests/errtests/*.swift)
 
 .PHONY: disks disk-iip-lite-repl disk-iip-sat-repl disk-iie-lite-repl disk-iie-aux-repl disk-data \
-        disk-iip-compiler disk-iie-compiler disk-iip-sat-compiler disks-familyb
+        disk-iip-compiler disk-iie-compiler disk-iie-aux-compiler disk-iip-sat-compiler disks-familyb
 disks: disk-iip-lite-repl disk-iip-sat-repl disk-iie-lite-repl disk-iie-aux-repl disk-data \
-       disk-iip-compiler disk-iie-compiler disk-iip-sat-compiler
+       disk-iip-compiler disk-iie-compiler disk-iie-aux-compiler disk-iip-sat-compiler
 
 disk-iip-lite-repl: $(PO_IIP_LITE)
 disk-iip-sat-repl:  $(PO_IIP_SAT)
@@ -1402,17 +1494,18 @@ disk-iie-lite-repl: $(PO_IIE_LITE)
 disk-iie-aux-repl:  $(PO_IIE_AUX)
 disk-iip-compiler: $(PO_IIP_COMP)
 disk-iie-compiler: $(PO_IIE_COMP)
+disk-iie-aux-compiler: $(PO_IIE_AUXCOMP)
 disk-iip-sat-compiler: $(PO_IIP_SATCOMP)
-disks-familyb: disk-iip-compiler disk-iie-compiler disk-iip-sat-compiler
+disks-familyb: disk-iip-compiler disk-iie-compiler disk-iie-aux-compiler disk-iip-sat-compiler
 
 # SwiftII version, read from the single source of truth in src/common/version.h.
 VERSION := $(shell sed -n 's/.*SWIFTII_VERSION[[:space:]]*"\([^"]*\)".*/\1/p' src/common/version.h)
 
-# Stage the eight distribution images under releases/v<version>/ for tagging +
+# Stage the nine distribution images under releases/v<version>/ for tagging +
 # upload to GitHub Releases. The per-version folder is exempted from the *.po
 # gitignore (see .gitignore !releases/**/*.po), so a tagged image set is
 # committed; loose build/disk/*.po stay ignored. Each copy gets a -v<version>
-# suffix (e.g. swiftii-iip-lite-repl-v1.0.0.po) so a single .po downloaded on
+# suffix (e.g. swiftii-iip-lite-repl-v1.0.1.po) so a single .po downloaded on
 # its own from GitHub Releases still carries its version out of the folder.
 .PHONY: release
 release: disks
@@ -1476,12 +1569,24 @@ $(PO_IIP_COMP): $(BOOT_LAUNCHER_BIN) $(A2COMP_BIN) $(A2RUN_BIN) $(DEBUG_SYS_BIN)
 	@mkdir -p $(DISK_DIR)
 	SAMPLES_DIR=$(SAMPLES_DIR) SAMPLES_EXTRAS_DIR=$(SAMPLES_EXTRAS_DIR) SAMPLE_SRC_LIMIT=0 SAMPLES_ONLY="$(FAMILYB_SAMPLES)" DEBUG_BIN=$(DEBUG_SYS_BIN) README_FILE=$(README_FILE_COMPILER) README_RUNNER="RUNNER   runs the .swb on any\n    II+ (no extra card)." README_UPPER=1 README_YEAR=$(SWIFTII_YEAR) README_VERSION=$(VERSION) README_BUILT="$(SWIFTII_BUILT)" bash tools/host/diskimg/build_po.sh $(BOOT_LAUNCHER_BIN) $@ COMPILER.SYSTEM $(A2COMP_BIN) RUNNER.SYSTEM $(A2RUN_BIN)
 
-# //e (Tier 3) disk: the AUX-PAGED Compiler + aux-paged Runner — both lift the
-# bytecode ceiling via the aux store, so a function-heavy program (e.g. xfuncs on
-# the data disk) compiles + runs far past the flat 1,834 B cap.
+# //e (Tier 1, non-aux) disk: the //e-native FLAT Compiler + flat Runner — the
+# Runner loads the whole .swb into MAIN (no aux paging) and drives the //e
+# FIRMWARE 80-col, the Compiler renders via the //e char ROM (WITH_IIE). Runs on
+# any //e, including one with only the 1K 80-Column Text Card — the gap the II+
+# fallback left (no //e 80-col, inverse-video case hack). Flat 1,834 B program
+# cap; a //e with the 64K extended aux card uses the aux disk below for big
+# programs.
 $(PO_IIE_COMP): $(BOOT_LAUNCHER_IIE_BIN) $(A2IIECOMP_BIN) $(A2IIERUN_BIN) $(DEBUG_SYS_BIN) $(SAMPLE_SWIFTS) $(README_FILE_COMPILER) src/common/version.h
 	@mkdir -p $(DISK_DIR)
-	SAMPLES_DIR=$(SAMPLES_DIR) SAMPLES_EXTRAS_DIR=$(SAMPLES_EXTRAS_DIR) SAMPLE_SRC_LIMIT=0 SAMPLES_ONLY="$(FAMILYB_SAMPLES)" DEBUG_BIN=$(DEBUG_SYS_BIN) README_FILE=$(README_FILE_COMPILER) README_RUNNER="RUNNER   runs the .swb on a //e\n    with a 64K aux card." README_YEAR=$(SWIFTII_YEAR) README_VERSION=$(VERSION) README_BUILT="$(SWIFTII_BUILT)" bash tools/host/diskimg/build_po.sh $(BOOT_LAUNCHER_IIE_BIN) $@ COMPILER.SYSTEM $(A2IIECOMP_BIN) RUNNER.SYSTEM $(A2IIERUN_BIN)
+	SAMPLES_DIR=$(SAMPLES_DIR) SAMPLES_EXTRAS_DIR=$(SAMPLES_EXTRAS_DIR) SAMPLE_SRC_LIMIT=0 SAMPLES_ONLY="$(FAMILYB_SAMPLES)" DEBUG_BIN=$(DEBUG_SYS_BIN) README_FILE=$(README_FILE_COMPILER) README_RUNNER="RUNNER   runs the .swb on any\n    //e (no extra card)." README_YEAR=$(SWIFTII_YEAR) README_VERSION=$(VERSION) README_BUILT="$(SWIFTII_BUILT)" bash tools/host/diskimg/build_po.sh $(BOOT_LAUNCHER_IIE_BIN) $@ COMPILER.SYSTEM $(A2IIECOMP_BIN) RUNNER.SYSTEM $(A2IIERUN_BIN)
+
+# //e (Tier 3, aux) disk: the AUX-PAGED Compiler + aux-paged Runner — both lift
+# the bytecode ceiling via the aux store, so a function-heavy program (e.g.
+# xfuncs on the data disk) compiles + runs far past the flat 1,834 B cap. Needs
+# the //e 64K extended 80-col (aux) card.
+$(PO_IIE_AUXCOMP): $(BOOT_LAUNCHER_IIE_AUX_BIN) $(A2IIEAUXCOMP_BIN) $(A2IIEAUXRUN_BIN) $(DEBUG_SYS_BIN) $(SAMPLE_SWIFTS) $(README_FILE_COMPILER) src/common/version.h
+	@mkdir -p $(DISK_DIR)
+	SAMPLES_DIR=$(SAMPLES_DIR) SAMPLES_EXTRAS_DIR=$(SAMPLES_EXTRAS_DIR) SAMPLE_SRC_LIMIT=0 SAMPLES_ONLY="$(FAMILYB_SAMPLES)" DEBUG_BIN=$(DEBUG_SYS_BIN) README_FILE=$(README_FILE_COMPILER) README_RUNNER="RUNNER   runs the .swb on a //e\n    with a 64K aux card." README_YEAR=$(SWIFTII_YEAR) README_VERSION=$(VERSION) README_BUILT="$(SWIFTII_BUILT)" bash tools/host/diskimg/build_po.sh $(BOOT_LAUNCHER_IIE_AUX_BIN) $@ COMPILER.SYSTEM $(A2IIEAUXCOMP_BIN) RUNNER.SYSTEM $(A2IIEAUXRUN_BIN)
 
 # Tier 2 (II+ Saturn) disk: the same II+ launcher, but the Saturn-paged Compiler
 # + Runner. Like the //e disk it pages bytecode (here into Saturn banks), so a
@@ -1573,6 +1678,7 @@ run-mari-aux: disk-iie-aux-repl
 # run-mari-compiler[-iie|-sat] + a `-2disk` suffix for the data-disk variant.
 .PHONY: run-mari-compiler run-mari-compiler-2disk \
         run-mari-compiler-iie run-mari-compiler-iie-2disk \
+        run-mari-compiler-iie-aux run-mari-compiler-iie-aux-2disk \
         run-mari-compiler-sat run-mari-compiler-sat-2disk
 run-mari-compiler: disk-iip-compiler
 	@echo ">>> In Mariani, configure: Apple ][+ , 64K (16K Language Card), NO Saturn  -> COMPILER/RUNNER"
@@ -1581,11 +1687,17 @@ run-mari-compiler-2disk: disk-iip-compiler disk-data
 	@echo ">>> In Mariani, configure: Apple ][+ , 64K (16K Language Card), NO Saturn  -> COMPILER/RUNNER"
 	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run.sh $(PO_IIP_COMP)
 run-mari-compiler-iie: disk-iie-compiler
-	@echo ">>> In Mariani, configure: Apple //e (128K)  -> COMPILER/RUNNER"
+	@echo ">>> In Mariani, configure: Apple //e , NO Extended 80-Col (64K)  -> COMPILER/RUNNER (Tier 1, fw 80-col)"
 	bash emulator/run.sh $(PO_IIE_COMP)
 run-mari-compiler-iie-2disk: disk-iie-compiler disk-data
-	@echo ">>> In Mariani, configure: Apple //e (128K)  -> COMPILER/RUNNER"
+	@echo ">>> In Mariani, configure: Apple //e , NO Extended 80-Col (64K)  -> COMPILER/RUNNER (Tier 1, fw 80-col)"
 	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run.sh $(PO_IIE_COMP)
+run-mari-compiler-iie-aux: disk-iie-aux-compiler
+	@echo ">>> In Mariani, configure: Apple //e WITH Extended 80-Column Card (128K)  -> COMPILER/RUNNER (Tier 3, aux-paged)"
+	bash emulator/run.sh $(PO_IIE_AUXCOMP)
+run-mari-compiler-iie-aux-2disk: disk-iie-aux-compiler disk-data
+	@echo ">>> In Mariani, configure: Apple //e WITH Extended 80-Column Card (128K)  -> COMPILER/RUNNER (Tier 3, aux-paged)"
+	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run.sh $(PO_IIE_AUXCOMP)
 run-mari-compiler-sat: disk-iip-sat-compiler
 	@echo ">>> In Mariani, configure: Apple ][+ WITH Saturn 128K  -> COMPILER/RUNNER"
 	bash emulator/run.sh $(PO_IIP_SATCOMP)
@@ -1623,8 +1735,8 @@ run-mari-compiler-sat-2disk: disk-iip-sat-compiler disk-data
 .PHONY: run-iz-ii run-iz-iip run-iz-sat run-iz-videx run-iz-iie run-iz-iienh \
         run-iz-iip48 run-iz-sat-s4 run-iz-memexp \
         run-iz-iip-2disk run-iz-sat-2disk run-iz-videx-2disk run-iz-iie-2disk \
-        run-iz-iienh-2disk run-iz-compiler run-iz-compiler-iie \
-        run-iz-compiler-2disk run-iz-compiler-iie-2disk \
+        run-iz-iienh-2disk run-iz-compiler run-iz-compiler-iie run-iz-compiler-iie-aux \
+        run-iz-compiler-2disk run-iz-compiler-iie-2disk run-iz-compiler-iie-aux-2disk \
         run-iz-compiler-sat run-iz-compiler-sat-2disk
 # Family B compiler disks (doc 015). Boot to the launcher; pick a
 # .swift in the file selector and press [X] to compile + run it.
@@ -1632,6 +1744,11 @@ run-iz-compiler: disk-iip-compiler
 	bash emulator/run_izapple2.sh iip $(PO_IIP_COMP)
 run-iz-compiler-iie: disk-iie-compiler
 	bash emulator/run_izapple2.sh iie $(PO_IIE_COMP)
+# //e Tier-3 (aux) compiler disk under the `iienh` profile (enhanced //e, 128K
+# w/ aux). The aux-paged Compiler/Runner; pick xfuncs.swift + [X] to exercise
+# aux_bc.s end-to-end past the flat cap.
+run-iz-compiler-iie-aux: disk-iie-aux-compiler
+	bash emulator/run_izapple2.sh iienh $(PO_IIE_AUXCOMP)
 # Tier 2 (II+ Saturn 128K): boots the Saturn compiler disk under the `sat`
 # profile (-model=2plus -s0 saturn). In the file selector pick xfuncs.swift and
 # press [X]: it compiles past the flat cap via Saturn-bank paging, then runs ->
@@ -1648,6 +1765,8 @@ run-iz-compiler-2disk: disk-iip-compiler disk-data
 	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run_izapple2.sh iip $(PO_IIP_COMP)
 run-iz-compiler-iie-2disk: disk-iie-compiler disk-data
 	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run_izapple2.sh iie $(PO_IIE_COMP)
+run-iz-compiler-iie-aux-2disk: disk-iie-aux-compiler disk-data
+	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run_izapple2.sh iienh $(PO_IIE_AUXCOMP)
 # Emulator-verify the //e Runner's aux paging end-to-end: builds the //e Family
 # B disk + a data disk carrying the oversized BIGPROG.SWB, and boots izapple2
 # (//e, 128K w/ aux). In the launcher: switch to the data disk (drive 2), select
@@ -1655,10 +1774,10 @@ run-iz-compiler-iie-2disk: disk-iie-compiler disk-data
 # it prints 4900 (700 * 7). bc_len ~4.9 KB > the old 2,944 B cap, so the paged
 # Runner reads it across many aux windows via the AUXMOVE driver (runner_aux.s).
 .PHONY: run-iz-bigswb-iie
-run-iz-bigswb-iie: disk-iie-compiler $(BIGPROG_SWB) $(SAMPLE_SWIFTS) $(DATA_SAMPLE_SWIFTS) $(TEST_SWIFTS)
+run-iz-bigswb-iie: disk-iie-aux-compiler $(BIGPROG_SWB) $(SAMPLE_SWIFTS) $(DATA_SAMPLE_SWIFTS) $(TEST_SWIFTS)
 	BIG_SWB=$(BIGPROG_SWB) SAMPLES_EXTRAS_DIR="$(SAMPLES_EXTRAS_DIR) $(FB_SAMPLES_DIR) $(DATA_SAMPLES_EXTRAS_DIR)" bash tools/host/diskimg/build_data_po.sh $(PO_IMAGE_DATA) \
 	  $(SAMPLES_DIR) $(TESTS_DIR) $(EXTRAS_TESTS_DIR) $(FB_TESTS_DIR) $(ERR_TESTS_DIR)
-	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run_izapple2.sh iie $(PO_IIE_COMP)
+	DATA_DISK=$(PO_IMAGE_DATA) bash emulator/run_izapple2.sh iienh $(PO_IIE_AUXCOMP)
 run-iz-iip: disk-iip-lite-repl
 	bash emulator/run_izapple2.sh iip $(PO_IIP_LITE)
 run-iz-sat: disk-iip-sat-repl
@@ -1708,7 +1827,7 @@ run-configs:
 	@echo ""
 	@echo "  Standard rows mount the DATA disk (samples + TESTS/) in drive 2 so you"
 	@echo "  can run programs; the edge/negative rows boot the program disk alone."
-	@echo "  8-disk set: each REPL program disk carries the launcher + ONE interpreter."
+	@echo "  9-disk set: each REPL program disk carries the launcher + ONE interpreter."
 	@echo ""
 	@echo "  CONFIG                                    TARGET                   SELECTS    NOTES"
 	@echo "  ----------------------------------------  -----------------------  ---------  -----"
@@ -1724,8 +1843,8 @@ run-configs:
 	@echo "  II+ Saturn 128K                           run-mari-sat-2disk       SWIFTSAT   iip-sat.po;  GUI: ][+ WITH Saturn 128K"
 	@echo "  //e 64K (no aux)                          run-mari-iie-2disk       SWIFTIIE   iie-lite.po; GUI: //e , 64K, NO aux/80-col"
 	@echo "  //e + extended 80-col (128K)              run-mari-aux-2disk       SWIFTAUX   iie-aux.po;  GUI: //e WITH Extended 80-Col (128K)"
-	@echo "  Family B compiler-runner (II+ / //e / Sat) run-mari-compiler[-iie|-sat]-2disk     boots the matching compiler disk + data disk"
-	@echo "  (run-mari-iip/sat/iie/aux + run-mari-compiler[-iie|-sat] are the single-disk equivalents — print the GUI hint, no data disk)"
+	@echo "  Family B compiler-runner (II+ / //e / //e aux / Sat) run-mari-compiler[-iie|-iie-aux|-sat]-2disk  boots the matching compiler disk + data disk"
+	@echo "  (run-mari-iip/sat/iie/aux + run-mari-compiler[-iie|-iie-aux|-sat] are the single-disk equivalents — print the GUI hint, no data disk)"
 	@echo ""
 	@echo "  -- edge / negative cases (izapple2; program disk only) --"
 	@echo "  Apple ][ (orig) 16K LC                    run-iz-ii                SWIFTIIP   iip-lite.po; boots+runs (crt0_ibasic.s _memcpy LC copy); C600G"
@@ -1748,7 +1867,7 @@ run-configs:
 # Pass CONFIGS="iip sat" to scope it; ARGS=--dry-run to print the plan;
 # ARGS=--window to watch it in a GUI window (browser, mirrors the rendered
 # screen incl. graphics); ARGS=--show to echo the text screen in the terminal.
-# Pass RELEASE=releases/v1.0.0 to run against a pre-built (released) image set
+# Pass RELEASE=releases/v1.0.1 to run against a pre-built (released) image set
 # instead of building disks fresh from source — the make build step is skipped.
 # Both disks are mounted read/write and write scenarios (editor saves, file
 # CRUD) modify them, so the harness always runs off per-config COPIES in
@@ -1826,7 +1945,7 @@ AUX_PARK_BUDGET   := 40704
 BOOT_LAUNCHER_BUDGET  := 40704
 
 .PHONY: size
-size: $(A2_SYSTEM_BIN) $(A2IIE_SYSTEM_BIN) $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_SAT_BIN) $(A2SAT_SYSTEM_BIN) $(A2AUX_SYSTEM_BIN) $(A2COMP_BIN) $(A2IIECOMP_BIN) $(A2RUN_BIN) $(A2IIERUN_BIN) $(A2SATCOMP_BIN) $(A2SATRUN_BIN) $(DEBUG_SYS_BIN) $(TESTRUN_SYS_BIN)
+size: $(A2_SYSTEM_BIN) $(A2IIE_SYSTEM_BIN) $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_IIE_BIN) $(BOOT_LAUNCHER_IIE_AUX_BIN) $(BOOT_LAUNCHER_SAT_BIN) $(A2SAT_SYSTEM_BIN) $(A2AUX_SYSTEM_BIN) $(A2COMP_BIN) $(A2IIECOMP_BIN) $(A2IIEAUXCOMP_BIN) $(A2RUN_BIN) $(A2IIERUN_BIN) $(A2IIEAUXRUN_BIN) $(A2SATCOMP_BIN) $(A2SATRUN_BIN) $(DEBUG_SYS_BIN) $(TESTRUN_SYS_BIN)
 	@# One table over all build artifacts, grouped by target. SWIFTSAT splits
 	@# into MAIN + XLC images (cfg `load = MAIN, run = LC`); SWIFTAUX into MAIN +
 	@# the park of 13 copy-down overlay bodies staged in aux RAM. `total` rows
@@ -1838,6 +1957,7 @@ size: $(A2_SYSTEM_BIN) $(A2IIE_SYSTEM_BIN) $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_
 	 iie=$$(wc -c < $(A2IIE_SYSTEM_BIN)); \
 	 launcher=$$(wc -c < $(BOOT_LAUNCHER_BIN)); \
 	 launcher_iie=$$(wc -c < $(BOOT_LAUNCHER_IIE_BIN)); \
+	 launcher_iie_aux=$$(wc -c < $(BOOT_LAUNCHER_IIE_AUX_BIN)); \
 	 launcher_sat=$$(wc -c < $(BOOT_LAUNCHER_SAT_BIN)); \
 	 smain=$$(wc -c < $(A2SAT_MAIN_BIN)); \
 	 sxlc=$$(wc -c < $(A2SAT_XLC_BIN)); \
@@ -1846,10 +1966,12 @@ size: $(A2_SYSTEM_BIN) $(A2IIE_SYSTEM_BIN) $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_
 	 apark=$$(( $$(wc -c < $(A2AUX_OVLASC_BIN)) + $$(wc -c < $(A2AUX_OVLCHR_BIN)) + $$(wc -c < $(A2AUX_OVLCALL_BIN)) + $$(wc -c < $(A2AUX_OVLSIP_BIN)) + $$(wc -c < $(A2AUX_OVLINT_BIN)) + $$(wc -c < $(A2AUX_OVLRML_BIN)) + $$(wc -c < $(A2AUX_OVLRMA_BIN)) + $$(wc -c < $(A2AUX_OVLCON_BIN)) + $$(wc -c < $(A2AUX_OVLSCC_BIN)) + $$(wc -c < $(A2AUX_OVLNAR_BIN)) + $$(wc -c < $(A2AUX_OVLALN_BIN)) + $$(wc -c < $(A2AUX_OVLPMEM_BIN)) + $$(wc -c < $(A2AUX_OVLPGR_BIN)) )); \
 	 atotal=$$(wc -c < $(A2AUX_SYSTEM_BIN)); \
 	 fbcomp=$$(wc -c < $(A2COMP_BIN)); \
-	 fbcompiie=$$(wc -c < $(A2IIECOMP_BIN)); \
+	 fbcompiieflat=$$(wc -c < $(A2IIECOMP_BIN)); \
+	 fbcompiie=$$(wc -c < $(A2IIEAUXCOMP_BIN)); \
 	 fbcompsat=$$(wc -c < $(A2SATCOMP_BIN)); \
 	 fbrun=$$(wc -c < $(A2RUN_BIN)); \
-	 fbruniie=$$(wc -c < $(A2IIERUN_BIN)); \
+	 fbruniieflat=$$(wc -c < $(A2IIERUN_BIN)); \
+	 fbruniie=$$(wc -c < $(A2IIEAUXRUN_BIN)); \
 	 fbrunsat=$$(wc -c < $(A2SATRUN_BIN)); \
 	 dbg=$$(wc -c < $(DEBUG_SYS_BIN)); \
 	 row="  %-16s %-11s %6d %8s %9s\n"; \
@@ -1867,14 +1989,17 @@ size: $(A2_SYSTEM_BIN) $(A2IIE_SYSTEM_BIN) $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_
 	 echo ""; \
 	 printf "$$row" "SWIFTII.SYSTEM"  "II+ launcher"  $$launcher     "$(BOOT_LAUNCHER_BUDGET)"  "$$(( $(BOOT_LAUNCHER_BUDGET) - launcher ))"; \
 	 printf "$$row" "SWIFTII.SYSTEM"  "//e launcher"  $$launcher_iie "$(BOOT_LAUNCHER_BUDGET)"  "$$(( $(BOOT_LAUNCHER_BUDGET) - launcher_iie ))"; \
+	 printf "$$row" "SWIFTII.SYSTEM"  "//e aux launch" $$launcher_iie_aux "$(BOOT_LAUNCHER_BUDGET)"  "$$(( $(BOOT_LAUNCHER_BUDGET) - launcher_iie_aux ))"; \
 	 printf "$$row" "SWIFTII.SYSTEM"  "Sat launcher"  $$launcher_sat "$(BOOT_LAUNCHER_BUDGET)"  "$$(( $(BOOT_LAUNCHER_BUDGET) - launcher_sat ))"; \
 	 printf "$$row" "DEBUG.SYSTEM"    "diagnostic"    $$dbg          "-"                        "-"; \
 	 echo ""; \
 	 printf "$$row" "COMPILER.SYSTEM" "Family B"     $$fbcomp   "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbcomp ))"; \
+	 printf "$$row" "COMPILER.SYSTEM" "B //e"        $$fbcompiieflat "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbcompiieflat ))"; \
 	 printf "$$row" "COMPILER.SYSTEM" "B //e aux"    $$fbcompiie "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbcompiie ))"; \
 	 printf "$$row" "COMPILER.SYSTEM" "B Saturn"     $$fbcompsat "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbcompsat ))"; \
 	 printf "$$row" "RUNNER.SYSTEM"   "Family B II+" $$fbrun    "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbrun ))"; \
-	 printf "$$row" "RUNNER.SYSTEM"   "Family B //e" $$fbruniie "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbruniie ))"; \
+	 printf "$$row" "RUNNER.SYSTEM"   "Family B //e" $$fbruniieflat "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbruniieflat ))"; \
+	 printf "$$row" "RUNNER.SYSTEM"   "B //e aux"    $$fbruniie "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbruniie ))"; \
 	 printf "$$row" "RUNNER.SYSTEM"   "B Saturn"     $$fbrunsat "$(LITE_SYS_BUDGET)" "$$(( $(LITE_SYS_BUDGET) - fbrunsat ))"; \
 	 echo ""; \
 	 echo "  80-col overhead per build (//e only):"; \
@@ -1885,14 +2010,17 @@ size: $(A2_SYSTEM_BIN) $(A2IIE_SYSTEM_BIN) $(BOOT_LAUNCHER_BIN) $(BOOT_LAUNCHER_
 	 [ $$iie   -le $(LITE_SYS_BUDGET) ]   || { echo "  ERROR: SWIFTIIE over budget"; ok=0; }; \
 	 [ $$launcher  -le $(BOOT_LAUNCHER_BUDGET) ]  || { echo "  ERROR: II+ boot launcher over budget"; ok=0; }; \
 	 [ $$launcher_iie -le $(BOOT_LAUNCHER_BUDGET) ] || { echo "  ERROR: //e boot launcher over budget"; ok=0; }; \
+	 [ $$launcher_iie_aux -le $(BOOT_LAUNCHER_BUDGET) ] || { echo "  ERROR: //e aux boot launcher over budget"; ok=0; }; \
 	 [ $$smain -le $(EXTRAS_SYS_BUDGET) ] || { echo "  ERROR: SWIFTSAT MAIN over budget"; ok=0; }; \
 	 [ $$sxlc  -le $(SAT_XLC_BUDGET) ]    || { echo "  ERROR: SWIFTSAT XLC over budget"; ok=0; }; \
 	 [ $$amain -le $(EXTRAS_SYS_BUDGET) ] || { echo "  ERROR: SWIFTAUX MAIN over budget"; ok=0; }; \
 	 [ $$fbcomp -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: COMPILER over budget"; ok=0; }; \
+	 [ $$fbcompiieflat -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: COMPILER (//e) over budget"; ok=0; }; \
 	 [ $$fbcompiie -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: COMPILER (//e aux) over budget"; ok=0; }; \
 	 [ $$fbcompsat -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: COMPILER (Saturn) over budget"; ok=0; }; \
 	 [ $$fbrun  -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: RUNNER (II+) over budget"; ok=0; }; \
-	 [ $$fbruniie -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: RUNNER (//e) over budget"; ok=0; }; \
+	 [ $$fbruniieflat -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: RUNNER (//e) over budget"; ok=0; }; \
+	 [ $$fbruniie -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: RUNNER (//e aux) over budget"; ok=0; }; \
 	 [ $$fbrunsat -le $(LITE_SYS_BUDGET) ] || { echo "  ERROR: RUNNER (Saturn) over budget"; ok=0; }; \
 	 [ $$ok -eq 1 ]
 	@if [ -f $(A2_MAP) ]; then \
