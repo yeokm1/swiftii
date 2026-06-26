@@ -49,7 +49,7 @@ smaller:
    [locals.h](../../../src/compiler/locals.h)). Lookup is by bytes, not
    by source offset. (Since 2026-06-17 a *declaration* longer than 11
    chars is a compile-time error - `expect_decl_name` in statements.c,
-   message "name longer than 11 chars" - rather than a silent truncation
+   message "name >11 chars" - rather than a silent truncation
    that could collide on a shared prefix; the store is therefore always
    the verbatim source name.)
 2. **String interpolation is token-local.**

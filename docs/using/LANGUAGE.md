@@ -259,7 +259,7 @@ ident ::= [A-Za-z_][A-Za-z0-9_]*
 ASCII letters, digits, and underscore. Case-sensitive. The symbol
 tables store **11 significant characters** per identifier (`IDENT_MAX` is 12,
 with one byte reserved for padding / termination). Declaring a longer name is
-a **compile-time error** (`name longer than 11 chars`) - it is *not* silently
+a **compile-time error** (`name >11 chars`) - it is *not* silently
 truncated, so distinct names can never collide on a shared prefix.
 
 This 11-character cap is a deliberate Apple II memory trade-off from
@@ -545,7 +545,7 @@ for item in items {
 Iterating an `Array` directly (`for item in items`) is a **Family B
 feature**: it binds each element in order. It
 compiles on a Family B disk (the standalone Compiler) but is **rejected by
-the Family A REPL interpreters** with `expected '..<'` - they sit at the
+the Family A REPL interpreters** with `want '..<'` - they sit at the
 64 K ceiling and the desugar's ~444 B of compiler code doesn't fit. On the
 REPL, walk the array by its index range (`for i in 0..<items.count`).
 Other iterables come in Tier 2.
@@ -1198,7 +1198,7 @@ writable in Applesoft or Pascal on a stock Apple II Plus fits (see
 `docs/contributing/design/004-demo-oriented-scope.md`).
 
 Declaring an identifier longer than the 11-character cap is a
-**compile-time error** (`name longer than 11 chars`), not a silent
+**compile-time error** (`name >11 chars`), not a silent
 truncation - so `accountBalanceUSD` is rejected outright rather than
 silently colliding with `accountBalanceEUR`. Typical Swift naming
 (`position`, `velocity`, `playerScore`, `currentLevel`) fits

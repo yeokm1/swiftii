@@ -187,7 +187,7 @@ type   := IDENT ('?')?           // Int, Int?
 ```
 
 `[Int?]` and `[Int]?` are rejected at the parser level
-(`"unsupported type"`) per the encoding constraint above.
+(`"bad type"`) per the encoding constraint above.
 
 `base_type_from_span` (Phase 7 commit 4a) maps the IDENT span to
 `CT_INT` / `CT_BOOL` / `CT_STRING`; unknown

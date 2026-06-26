@@ -11,7 +11,7 @@
 // 12 characters.
 //
 // Expected on screen: compile error:
-// line 19: name longer than 11 chars
+// line 19: name >11 chars
 //
 // (An 11-char name like longvarnam1
 // compiles fine. The same dedicated

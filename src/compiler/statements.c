@@ -52,7 +52,7 @@ const char ERR_EXPECTED_RANGE[]  = "want '..<'";
 const char ERR_UNDECLARED_NAME[] = "undeclared name";
 
 /* Only referenced in this TU. */
-static const char ERR_NAME_TOO_LONG[] = "name too long";
+static const char ERR_NAME_OVER_LEN[] = "name >11 chars";
 
 /* Validate the current token as a declarable identifier: it must be a
  * TOK_IDENT and fit the symbol-table width (IDENT_MAX-1 = 11 significant
@@ -67,7 +67,7 @@ static int expect_decl_name(Parser *p) {
     return 0;
   }
   if (p->L.tok_len >= (uint16_t)IDENT_MAX) {
-    parser_fail(p, SE_BAD_OPCODE, ERR_NAME_TOO_LONG);
+    parser_fail(p, SE_BAD_OPCODE, ERR_NAME_OVER_LEN);
     return 0;
   }
   return 1;

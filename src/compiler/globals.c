@@ -6,7 +6,7 @@
  *
  * Declaring a name longer than IDENT_MAX-1 chars is a compile-time error.
  * The parser reports it (expect_decl_name in statements.c, with a dedicated
- * "name longer than 11 chars" message); globals_define / locals_declare /
+ * "name >11 chars" message); globals_define / locals_declare /
  * funcs_declare also reject it defensively, which guarantees a stored name is
  * always the full source identifier. A *reference* to an over-length name can
  * still be lexed (e.g. a long builtin name, or a typo); names_match clamps the

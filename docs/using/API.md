@@ -522,7 +522,7 @@ for i in 0..<names.count { print(names[i]) }
 | VM stack depth | 32 slots | 32 slots |
 
 Declaring an identifier longer than the cap is a **compile-time error**
-(`name longer than 11 chars`), not a silent truncation. Full table and rationale:
+(`name >11 chars`), not a silent truncation. Full table and rationale:
 [LANGUAGE.md → Implementation limits](LANGUAGE.md#implementation-limits).
 
 ---

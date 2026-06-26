@@ -11,7 +11,7 @@
 //   - type mismatch
 //   - unknown member
 //   - need '(...)'
-//   - name longer than 11 chars (see
+//   - name >11 chars (see
 //     ENAMELEN)
 //
 // Expect on screen: compile error:

@@ -1,6 +1,6 @@
 // esyntax - COMPILE ERROR demo.
 // Statement / declaration syntax.
-// This file shows 'expected )';
+// This file shows 'want )';
 // the parser raises one of these for
 // any token it cannot place.
 //
@@ -8,22 +8,22 @@
 // (edit the source to try one; full
 // list in the ERRTESTS README + the
 // host test error_paths_test.c):
-//   - expected name
-//   - expected '('
-//   - expected ':'
-//   - expected '{'
-//   - expected ']'
-//   - expected '='
-//   - expected 'in'
-//   - expected 'in:'
-//   - expected expression
-//   - expected type
+//   - want name
+//   - want '('
+//   - want ':'
+//   - want '{'
+//   - want ']'
+//   - want '='
+//   - want 'in'
+//   - want 'in:'
+//   - want expression
+//   - want type
 //   - missing '='
-//   - expected ';' or '}'
-//   - expected ';' or EOF
+//   - want ';' or '}'
+//   - want ';' or EOF
 //   - unexpected EOF
-//   - unsupported type ([T?])
+//   - bad type ([T?])
 //
 // Expect on screen: compile error:
-// line N: expected ')'
+// line N: want ')'
 print(1

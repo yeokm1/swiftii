@@ -245,7 +245,7 @@ host by `error_paths_test.c`; on target we only confirm the right message
 *reached the screen*. The two runtime demos check the banner alone — the Runner
 prints only `runtime error`, with no per-trap text.
 
-> Messages quote tokens with single quotes (e.g. `expected ')'`), not
+> Messages quote tokens with single quotes (e.g. `want ')'`), not
 > backticks: the pre-IIe character ROM has no backtick glyph, so `` `)` `` would
 > scrape as `@)@`.
 

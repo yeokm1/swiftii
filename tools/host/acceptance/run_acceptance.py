@@ -1651,11 +1651,11 @@ ERR_EXPECT = {
     "EFLOW":    ("COMPILE ERROR", "BREAK OUTSIDE"),
     "EFUNCS":   ("COMPILE ERROR", "MISSING RETURN"),
     "ELEX":     ("COMPILE ERROR", "INT RANGE"),         # integer literal out of Int range
-    "ENAMELEN": ("COMPILE ERROR", "NAME LONGER THAN"),
+    "ENAMELEN": ("COMPILE ERROR", "NAME >11 CHARS"),
     "ENAMES":   ("COMPILE ERROR", "UNDECLARED NAME"),
     "ERUNTIME": ("RUNTIME ERROR", None),               # division by zero
     "ESTRINGS": ("COMPILE ERROR", "ESCAPE SEQUENCE"),
-    "ESYNTAX":  ("COMPILE ERROR", "EXPECTED ')'"),
+    "ESYNTAX":  ("COMPILE ERROR", "WANT ')'"),
 }
 
 

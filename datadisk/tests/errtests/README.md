@@ -47,9 +47,9 @@ per-message trigger list is in `error_paths_test.c`.
 
 | File | Family | Demonstrates |
 |------|--------|--------------|
-| `esyntax.swift`  | statement / declaration syntax | `expected ')'` (+ the other `expected …` / `missing '='` / `unexpected EOF` / `unsupported type` messages) |
+| `esyntax.swift`  | statement / declaration syntax | `want ')'` (+ the other `want …` / `missing '='` / `unexpected EOF` / `bad type` messages) |
 | `enames.swift`   | name resolution & typing | `undeclared name` (+ `type mismatch`, `unknown member`, `need '(...)'`) |
-| `enamelen.swift` | identifier length | `name longer than 11 chars` |
+| `enamelen.swift` | identifier length | `name >11 chars` |
 | `efuncs.swift`   | functions | `missing return` (+ `void no value`, `bad arg count`, `use positional args, not labels`, `no nested func`) |
 | `eflow.swift`    | control flow & switch | `break outside` (+ `return outside`, `for-var let`, `default last`, `nested sw`, `switch Int/Bool`, `want case`, `let is const`) |
 | `estrings.swift` | strings & interpolation | `unknown string escape sequence` (+ `empty interpolation`, `bad interp`, the nested/newline/unterminated string-lexer messages) |

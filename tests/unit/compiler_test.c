@@ -186,7 +186,7 @@ int test_compile_ident_too_long_is_error(void) {
   compiler_compile_source(src, (uint16_t)strlen(src), &cr);
   EXPECT(cr.err != SE_OK, 1);
   EXPECT(cr.err_msg != (const char *)0, 2);
-  EXPECT(strcmp(cr.err_msg, "name too long") == 0, 3);
+  EXPECT(strcmp(cr.err_msg, "name >11 chars") == 0, 3);
   return 0;
 }
 
@@ -198,7 +198,7 @@ int test_compile_func_name_too_long_is_error(void) {
   compiler_compile_source(src, (uint16_t)strlen(src), &cr);
   EXPECT(cr.err != SE_OK, 1);
   EXPECT(cr.err_msg != (const char *)0, 2);
-  EXPECT(strcmp(cr.err_msg, "name too long") == 0, 3);
+  EXPECT(strcmp(cr.err_msg, "name >11 chars") == 0, 3);
   return 0;
 }
 

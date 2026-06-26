@@ -91,7 +91,7 @@ int test_error_paths_compile(void) {
 
     /* --- name resolution / typing --- */
     { "print(zz)\n",                       "undeclared name" },
-    { "let twelvecharss = 1\n",            "name too long" },
+    { "let twelvecharss = 1\n",            "name >11 chars" },
     { "var w: Int = \"hi\"\n",             "type mismatch" },
     { "let s = \"ok\"\nprint(s.bad)\n",    "unknown member" },
     { "func f(){}\nlet x = f\n",           "need '(...)'" },
