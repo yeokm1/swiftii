@@ -50,7 +50,7 @@
 .import _xlc_vlin_dispatch               ; slot 22 — BUILTIN_VLIN ($23)
 .import _xlc_scrn_dispatch               ; slot 23 — BUILTIN_SCRN ($24)
 .import _xlc_text80_dispatch             ; slot 24 — BUILTIN_TEXT80 ($25, Videx)
-.import _xlc_repl_readline_dispatch      ; slot 25 — XLC_OP_REPL_READLINE ($26)
+.import _xlc_repl_key_dispatch           ; slot 25 — XLC_OP_REPL_KEY ($26)
 
 xlc_table:
         jmp     _xlc_asc_dispatch        ; $D000 — BUILTIN_ASC
@@ -103,5 +103,5 @@ xlc_table:
         .byte   $EA                      ; pad to 4 B
         jmp     _xlc_text80_dispatch          ; $D060 — BUILTIN_TEXT80 (Videx)
         .byte   $EA                      ; pad to 4 B
-        jmp     _xlc_repl_readline_dispatch   ; $D064 — XLC_OP_REPL_READLINE
+        jmp     _xlc_repl_key_dispatch        ; $D064 — XLC_OP_REPL_KEY
         .byte   $EA                      ; pad to 4 B

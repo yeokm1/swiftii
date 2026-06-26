@@ -59,15 +59,9 @@ int16_t platform_read_line(char *buf, uint16_t max_len);
  * from 0 (EOF) so the readLine builtin can raise SE_BREAK vs. push none. */
 #define PLATFORM_READ_BREAK ((int16_t)-2)
 
-/* The REPL prompt's line read. Identical to platform_read_line except on
- * SWIFTSAT, where it is a trampoline (keyboard.c) that runs platform_read_line
- * in Saturn bank 1 so its blinking cursor (which lives in the bank-1 XLC
- * overlay) is reachable. Everywhere else it is platform_read_line itself. */
-#if defined(WITH_SWIFTSAT)
-int16_t repl_read_line(char *buf, uint16_t max_len);
-#else
+/* The REPL prompt's line read. Kept as an alias so drivers can distinguish the
+ * REPL call site later without changing every backend. */
 #define repl_read_line platform_read_line
-#endif
 
 /* A 16-bit entropy value for seeding random(in:). The Apple II has no clock,
  * so (as Applesoft's RND did via the monitor's KEYIN counter) the only real

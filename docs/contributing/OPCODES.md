@@ -227,7 +227,7 @@ Builtin IDs (see `src/vm/opcodes.h`):
 | $23   | BUILTIN_VLIN      | argc=3 (y1, y2, x); vertical block run, pushes nil. SE_RUNTIME out of range. **Extras** (table slot 22) |
 | $24   | BUILTIN_SCRN      | argc=2 (x, y); pushes the GR colour 0..15 at (x,y) (host 0). SE_RUNTIME out of range. **Extras** (table slot 23) |
 | $25   | BUILTIN_TEXT80    | argc=0; switch to 80-column text when the active machine/build supports it (//e firmware path or II+ Videx path), pushes nil. No-op on Family B II+ without Videx. |
-| $26   | BUILTIN_READ_FILE | `readFile(_ path: String) -> String?` - argc=1 String; pushes the file's bytes as a heap String (capped at `USERFILE_READ_CAP` = 512 B/call) or `T_OPT_NIL` if it can't be opened. **Family B Runner only** (`WITH_SWB` - the Family A interpreters have no MLI for files). Raw MLI via `src/runtime/file_io.c` |
+| $26   | XLC_OP_REPL_KEY / BUILTIN_READ_FILE | Internal SWIFTSAT XLC slot: wait for one REPL key while blinking the cursor, returning the key byte to the MAIN line editor. Same numeric id is `readFile(_ path: String) -> String?` in Family B bytecode: argc=1 String; pushes file bytes as a heap String (capped at `USERFILE_READ_CAP` = 512 B/call) or `T_OPT_NIL` if open fails. The domains are disjoint: Family B intercepts file builtins before XLC routing, and the REPL key id is never emitted. |
 | $27   | BUILTIN_WRITE_FILE| `writeFile(_ path: String, _ s: String) -> Bool` - argc=2 Strings; creates/truncates `path` (ProDOS TXT), writes `s`, pushes Bool success. **Family B Runner only** (`WITH_SWB`), same dialect-fork caveat as $26 - a program using these compiles on a Family B disk and errors in the REPL |
 | $28   | BUILTIN_DELETE_FILE | `deleteFile(_ p)` / `deleteDirectory(_ p)` - argc=1 String → Bool; MLI DESTROY (refuses a non-empty directory). Two compiler names, one id. **Family B (`WITH_SWB`)** |
 | $29   | BUILTIN_RENAME_FILE | `renameFile(_ old, _ new)` - argc=2 Strings → Bool; MLI RENAME (same volume). **Family B** |
@@ -240,14 +240,12 @@ Builtin IDs (see `src/vm/opcodes.h`):
 | $30   | BUILTIN_HAS_PREFIX  | `s.hasPrefix(_ t: String) -> Bool`; argc=2 (receiver + prefix). **Family B + host only** |
 | $31   | BUILTIN_HAS_SUFFIX  | `s.hasSuffix(_ t: String) -> Bool`; argc=2 (receiver + suffix). **Family B + host only** |
 
-Ids $26-$31 are Family-B-only program builtins. The file/directory block
+Ids $26-$31 are Family-B-only program builtins except for the disjoint
+SWIFTSAT-only internal `XLC_OP_REPL_KEY` use of $26. The file/directory block
 ($26-$2D) is intercepted at the top of `OP_CALL_BUILTIN` (`vm_file_builtin`,
 gated `WITH_SWB`) so the Runner and the host share one execution path. The
 system/string-convenience block ($2E-$31) rides the core-builtin dispatch path.
-Family B never uses per-id XLC table slots for these ids. Separately, the
-SWIFTSAT REPL reserves the same numeric value `$26` as the internal
-`XLC_OP_REPL_READLINE` dispatch slot; it is not a Swift builtin and cannot
-coexist with the Family-B file builtin block in one build.
+Family B never uses per-id XLC table slots for these ids.
 
 `String(_ n: Int) -> String` does not consume a builtin slot: the
 compiler emits `OP_STR_INTERP_I` after parsing the Int argument, which

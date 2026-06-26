@@ -273,15 +273,13 @@ typedef unsigned char op_t;
  * without WITH_80COL. text() ($1E) gains the matching 80->40 revert. */
 #define BUILTIN_TEXT80    0x25
 
-/* SWIFTSAT-only synthetic XLC dispatch id for the REPL line read — NOT a Swift
- * builtin, just the next free XLC table slot (25 = id - BUILTIN_XLC_FIRST) after
- * text80. It lets the REPL run platform_read_line (and its bank-1 blinking
- * cursor) in Saturn bank 1 via call_xlc_dispatch (keyboard.c repl_read_line).
- * Reuses the 0x26 value safely: the file builtins below are WITH_SWB-only and
- * never reach the SWIFTSAT XLC table, so the two never coexist in one build. */
-#if defined(WITH_SWIFTSAT)
-#define XLC_OP_REPL_READLINE 0x26
-#endif
+/* Internal SWIFTSAT REPL key wait (table slot 25). This is not bytecode and
+ * not a user builtin: the MAIN line editor calls it directly through the XLC
+ * trampoline to wait for one key while blinking the cursor. It deliberately
+ * shares $26 with Family B readFile because those dispatch domains are
+ * disjoint: Family B file builtins never reach the XLC table, and this id is
+ * never emitted by the compiler. */
+#define XLC_OP_REPL_KEY   0x26
 
 /* Family B file I/O (doc 015). WITH_SWB-gated: recognized by the
  * standalone Compiler and run by the Runner (both MAIN-only, so they have

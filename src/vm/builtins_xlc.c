@@ -57,6 +57,10 @@
 #include "vm.h"
 #include "builtins_xlc.h"
 
+#if defined(__CC65__) && defined(WITH_SWIFTSAT)
+extern unsigned char g_read_line_in_xlc;
+#endif
+
 /* MAIN-resident VM stack — declared non-static in vm.c specifically
  * so the XLC dispatchers below can pop/push directly. vm_sp comes
  * via common/zeropage.h (zero-page on cc65, regular global on host). */
@@ -710,7 +714,13 @@ swiftii_err_t xlc_call_builtin_dispatch(uint8_t argc) {
     char linebuf[256];
     int16_t n;
     if (argc != 0) return SE_BAD_OPCODE;
+#if defined(__CC65__) && defined(WITH_SWIFTSAT)
+    g_read_line_in_xlc = 1;
+#endif
     n = platform_read_line(linebuf, (uint16_t)sizeof(linebuf));
+#if defined(__CC65__) && defined(WITH_SWIFTSAT)
+    g_read_line_in_xlc = 0;
+#endif
     if (vm_sp >= VM_STACK_SLOTS) return SE_STACK_OVER;
     if (n <= 0) {
       v.tag = T_OPT_NIL; v.lo = 0; v.hi = 0;

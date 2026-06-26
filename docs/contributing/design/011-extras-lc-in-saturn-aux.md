@@ -723,48 +723,28 @@ The id→table math and the copy run in always-mapped MAIN; only the
 
 ---
 
-# REPL blinking cursor via the XLC trampoline (SWIFTSAT)
+# SWIFTSAT REPL cursor blink: one-key XLC helper only
 
-`call_xlc_dispatch` also drives one path that is **not** a VM builtin: the
-SWIFTSAT REPL's blinking cursor. The 40-column REPL hand-rolls a blinking cursor
-(`read_key_blink` + `platform_cursor_cell`, mirroring the editor). On
-`SWIFTIIP`/`SWIFTIIE`/`SWIFTAUX` the ~180 B body sits in MAIN; on `SWIFTSAT`
-MAIN is full, so the body lives in the XLC overlay.
+`call_xlc_dispatch` drives one non-VM-builtin path: the SWIFTSAT REPL cursor
+blink. The first implementation routed the entire REPL line reader through a
+synthetic `XLC_OP_REPL_READLINE` table slot so `platform_read_line` ran while
+Saturn bank 1 was selected. That crashed the SAT acceptance sweep on the first
+test (`A232- A=00 X=00 Y=06 ...`) and a typed `1+2` in the SWIFTSAT REPL did
+the same. The XLC call returned cleanly when the caller skipped compilation,
+but compiling after the read ran with the LC window unstable.
 
-The wrinkle: `read_key_blink` lives in bank 1, so `platform_read_line` (which
-calls it) must run with bank 1 selected. `platform_read_line` has two callers:
+The current shape keeps the line editor in MAIN and banks only the cold wait
+for one key: `platform_read_line` calls `XLC_OP_REPL_KEY` (`$26`) for each REPL
+keypress, and the XLC helper blinks the 40-column cursor until `cgetc()` can
+consume the pending key. Editing, echo, translation, and the later compiler
+entry all run after the trampoline has restored bank 0.
 
-- a program's `readLine()` - already in bank 1 (via `xlc_call_builtin_dispatch`),
-  so it reaches the bank-1 cursor for free;
-- the REPL prompt (`repl.c`) - runs in bank 0.
+Program `readLine()` on SWIFTSAT is intentionally different. It is already
+executing inside the XLC core-builtin dispatcher, so it sets
+`g_read_line_in_xlc` and uses the plain `cgetc()` path inside
+`platform_read_line`. That avoids nested `call_xlc_dispatch` restoring bank 0
+while the outer XLC dispatcher still has to return through bank-1 code.
 
-So the REPL prompt routes its line read through the trampoline: `repl_read_line`
-(MAIN) stashes the buffer pointer + length in MAIN-BSS globals, then calls
-`call_xlc_dispatch(XLC_OP_REPL_READLINE)` - a new **synthetic** dispatch id
-(0x26, JMP-table slot 25, the next free slot after `text80`; it reuses the
-`readFile` value, which is WITH_SWB-only and never reaches the SWIFTSAT table).
-The bank-1 dispatcher `xlc_repl_readline_dispatch` runs `platform_read_line` in
-bank 1 and returns the 0..255 line length through the dispatch's 1-byte A
-register (no result global). `repl_read_line` is a plain alias for
-`platform_read_line` on every non-SWIFTSAT build.
-
-Why bank 1 is safe for the whole line read: video RAM ($0400) and the keyboard
-register ($C000) are not shadowed by the LC bank, cc65's `cgetc`/`kb_ready`
-poll $C000 directly (no ROM), and the 40-col echo (cc65 `cputc`) writes the page
-directly. The 80-col echo (`cout_char` → `JSR $FDED`) works because on
-Saturn-slot-0 *Saturn is the LC*, so `cout_char`'s `bit $C082`/`bit $C080`
-ROM-wrap toggles Saturn's own switches and $FDED reads real ROM (verified by the
-`videx` acceptance config typing at the 80-col prompt). Slot-N + Videx is the
-same pre-existing limit that already governs SWIFTSAT 80-col XLC `print`.
-
-Blink cadence is unified across the REPL, the editor, and the launcher
-file-selector: all three toggle on the shared `0x1FFF` counter **and** spend one
-keyboard-probe *call* per idle pass (REPL `kb_ready`, editor `kbhit`, launcher
-`a_kbd`), so they blink at the same rate. A bare inline $C000 poll has no call,
-so it iterates far faster and blinks visibly quicker - hence the deliberate
-`kb_ready` call. `kb_ready` is a local probe (not cc65 `kbhit`) so it sits in
-the XLC region on SWIFTSAT rather than pulling conio into the full MAIN.
-
-The cursor's ~212 B is in the XLC overlay, so `SWIFTSAT` MAIN keeps 3 B
-headroom; Runner/Compiler are byte-identical (the cursor is gated to the REPL
-interpreters, WITH_SWB excluded).
+`$26` is therefore overloaded only across disjoint domains: internally it is
+`XLC_OP_REPL_KEY` for SWIFTSAT's XLC table, while Family B bytecode still uses
+`BUILTIN_READ_FILE` and intercepts it before any XLC routing.

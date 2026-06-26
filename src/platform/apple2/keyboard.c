@@ -38,9 +38,9 @@
 #include "input.h"
 #include "../../common/config.h"   /* SWIFTII_RANDOM */
 #include "histring.h"              /* derives WITH_LINE_HISTORY; recall ring API */
-#if defined(WITH_SWIFTSAT)
-#include "../../common/errors.h"   /* swiftii_err_t / SE_OK for the XLC dispatcher */
-#include "../../vm/opcodes.h"      /* XLC_OP_REPL_READLINE */
+#if defined(__CC65__) && defined(WITH_SWIFTSAT) && !defined(WITH_SWB)
+#include "../../common/errors.h"
+#include "../../vm/opcodes.h"
 #endif
 
 #include <stdint.h>
@@ -51,6 +51,15 @@
 #define KEY_DELETE     0x7F
 #define KEY_CTRL_W     0x17  /* input-layer underscore (design doc 003); matches the editor */
 #define KEY_CTRL_D     0x04  /* EOF — exit the REPL on an empty line */
+
+#if defined(__CC65__) && defined(WITH_SWIFTSAT) && !defined(WITH_SWB)
+extern swiftii_err_t __fastcall__ call_xlc_dispatch(uint8_t id);
+
+/* Set by the SWIFTSAT XLC core-builtin dispatcher while a program is blocked
+ * in readLine(). That call is already running with Saturn bank 1 selected, so
+ * platform_read_line must not recurse through call_xlc_dispatch for each key. */
+unsigned char g_read_line_in_xlc;
+#endif
 
 /* Line-history recall — //e REPL binaries only (ROADMAP). The recall ring +
  * nav logic lives in histring.{c,h}, which derives WITH_LINE_HISTORY from
@@ -154,22 +163,16 @@ static uint16_t hist_replace(char *buf, uint16_t cur_i, const char *src,
  * (less runtime data for every program) to buy a cursor that only shows during
  * a program's readLine.
  *
- * SWIFTSAT (II+ Saturn REPL) DOES get it, but its MAIN sits at the ~36 B budget
- * wall, so the ~180 B body lives in the Saturn-bank-1 XLC overlay instead (the
- * XLC_FN pragma below). Everything the blink touches works from bank 1 — $0400
- * video RAM and $C000 aren't shadowed by the LC bank, and cc65's cgetc polls
- * $C000 directly (no ROM) — which is exactly why the existing XLC readLine runs
- * platform_read_line from bank 1 already. The catch is platform_read_line is
- * called from two bank contexts: a program's readLine (already bank 1, via
- * xlc_call_builtin_dispatch) and the REPL prompt (bank 0). So the REPL routes
- * its line read through the trampoline (repl_read_line below) to run
- * platform_read_line — and thus this bank-1 helper — in bank 1 too. */
-#if defined(__CC65__) && defined(WITH_SWIFTSAT)
-#pragma code-name (push, "XLC")        /* read_key_blink -> Saturn bank 1 */
-#endif
+ * On SWIFTSAT, only this key-wait helper lives in XLC and returns one byte at
+ * a time to the MAIN line editor. Running the whole line editor under XLC left
+ * the compiler's LC window unstable on return after REPL input. */
 #if !defined(WITH_SWB)
 #define CURSOR_BLOCK   0x20    /* inverse space = solid block */
 #define BLINK_MASK     0x1FFFu /* toggle cadence; matches the editor + launcher */
+
+#if defined(__CC65__) && defined(WITH_SWIFTSAT)
+#pragma code-name (push, "XLC")
+#endif
 
 /* Non-blocking keyboard probe. A standalone call (cc65 does not inline it) so
  * the blink loop pays one call per idle pass — matching the editor's kbhit() and
@@ -242,43 +245,16 @@ static unsigned char read_key_blink(void) {
   *cur = save;
   return (unsigned char)cgetc();
 }
-#endif
 
-#if defined(WITH_SWIFTSAT)
-/* SWIFTSAT REPL line-read trampoline. repl_read_line (MAIN) hands the buffer to
- * the bank-1 dispatcher via these MAIN-BSS slots (the dispatch convention
- * carries only argc + a 1-byte return, so the buffer + length ride globals),
- * then call_xlc_dispatch switches Saturn to bank 1 and JSRs the table slot. The
- * dispatcher runs platform_read_line in bank 1, where read_key_blink (also
- * bank 1) is reachable by a direct JSR. */
-static char     *g_repl_buf;
-static uint16_t  g_repl_max;
-
-extern swiftii_err_t __fastcall__ call_xlc_dispatch(uint8_t id);
-
-#if defined(__CC65__)
-#pragma code-name (pop)                /* end read_key_blink XLC region */
-#pragma code-name (push, "XLC")        /* dispatcher -> Saturn bank 1   */
-#endif
-/* Bank-1 entry reached through the XLC JMP table (slot 25). The REPL line read
- * returns 0..255 (platform_read_line reserves 2 bytes of a 256-byte buffer), so
- * it fits the dispatch's 1-byte A-register return — no result global needed. */
-swiftii_err_t xlc_repl_readline_dispatch(uint8_t argc) {
+#if defined(__CC65__) && defined(WITH_SWIFTSAT)
+swiftii_err_t xlc_repl_key_dispatch(uint8_t argc) {
   (void)argc;
-  return (swiftii_err_t)platform_read_line(g_repl_buf, g_repl_max);
+  return (swiftii_err_t)read_key_blink();
 }
-#if defined(__CC65__)
+
 #pragma code-name (pop)
 #endif
-
-/* MAIN-side trampoline the REPL calls in place of platform_read_line. argc is
- * unused by this dispatcher, so xlc_argc is left at whatever it held. */
-int16_t repl_read_line(char *buf, uint16_t max_len) {
-  g_repl_buf = buf;
-  g_repl_max = max_len;
-  return (int16_t)(uint8_t)call_xlc_dispatch(XLC_OP_REPL_READLINE);
-}
-#endif /* WITH_SWIFTSAT */
+#endif
 
 int16_t platform_read_line(char *buf, uint16_t max_len) {
   uint16_t i;
@@ -293,10 +269,15 @@ int16_t platform_read_line(char *buf, uint16_t max_len) {
 
   i = 0;
   for (;;) {
-#if !defined(WITH_SWB)
+#if !defined(WITH_SWB) && defined(WITH_SWIFTSAT)
+    if (g_read_line_in_xlc) {
+      c = (unsigned char)cgetc();
+    } else {
+      c = (unsigned char)call_xlc_dispatch(XLC_OP_REPL_KEY);
+    }
+#elif !defined(WITH_SWB)
     /* REPL interpreters: wait for a key while blinking the 40-col cursor (80-col
-     * defers to the firmware cursor inside the helper). On SWIFTSAT this and the
-     * helper run in Saturn bank 1; see read_key_blink + repl_read_line. */
+     * defers to the firmware cursor inside the helper). */
     c = read_key_blink();
 #else
 #if SWIFTII_RANDOM

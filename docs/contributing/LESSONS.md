@@ -825,3 +825,17 @@ replica (linear `aux_store` memcpy), great for testing window math — but it do
 above was invisible on host and only reproduced on the emulator. For bank-driver
 bugs, instrument the on-target Runner (a stage→read-back checksum under a build
 flag) and scrape the screen; a green host run proves nothing about the bank path.
+
+### Bank only the SWIFTSAT REPL key wait, not the line editor
+
+The SAT acceptance sweep once died on the first test with
+`A232- A=00 X=00 Y=06 ...`; a typed `1+2` in the SWIFTSAT REPL reproduced it.
+The failing path routed `repl_read_line` through a synthetic XLC table slot so
+the blinking cursor helper could live in Saturn bank 1. The XLC call returned
+cleanly if the caller skipped compilation, but compiling after the read ran with
+the LC window unstable. The working shape is narrower: keep
+`platform_read_line` in MAIN and call a synthetic `XLC_OP_REPL_KEY` only while
+waiting for each REPL key, so the trampoline restores bank 0 before editing,
+translation, and compilation continue. Do not use that nested key trampoline
+from program `readLine()`; on SWIFTSAT the core builtin is already executing in
+XLC, so it stays on plain `cgetc()`.
