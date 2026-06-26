@@ -41,7 +41,7 @@ swiftii/
 │   │       ├── 001-template.md
 │   │       ├── 002-heap-and-strings.md     ← heap allocator
 │   │       ├── 003-apple2-input-method.md  ← //+ source-level digraphs
-│   │       └── 004…020-*.md                ← one per decision
+│   │       └── 004…021-*.md                ← one per decision
 │   └── testing/               ← TESTERS: test-layer reference + on-target playbooks
 │       ├── TESTING.md            ← test layers and how to add tests
 │       ├── TESTING-emulators.md  ← emulator acceptance pass (all disks)
@@ -195,8 +195,8 @@ swiftii/
 │   │   └── runner.c           ← discovers and runs all test fns
 │   ├── editor/                ← editor host tests (gapbuf/textnav/screen/keymap/fileio/session)
 │   ├── platform/              ← histring_test.c (REPL line-history ring)
-│   ├── integration/           ← .swift programs in file mode (001…026, 800) + runner.sh
-│   ├── repl/                  ← scripted REPL sessions (001…017) + runner.sh
+│   ├── integration/           ← .swift programs in file mode (001…028, 800) + runner.sh
+│   ├── repl/                  ← scripted REPL sessions (001…020) + runner.sh
 │   ├── repl-iie/              ← //e-only REPL sessions (e.g. function redefinition)
 │   ├── ondisk/                ← host-runs the datadisk/tests/ suites (runner.sh,
 │   │                            `make ondisk-host`; core + fbtests, emulator-free)
@@ -224,7 +224,7 @@ swiftii/
 │   │   │   └── debug_asm.s    ← ROM + read-only MLI wrappers + probes + chain-back
 │   │   │                        bouncer (no launcher link)
 │   │   └── testrun_sys/       ← TESTRUN.SYSTEM: on-target auto-test sequencer
-│   │                            (design 011; ships on the data disk)
+│   │                            (design 018; ships on the data disk)
 │   └── host/                  ← tools that run on the DEV MACHINE
 │       ├── acceptance/        ← automated emulator acceptance harness
 │       │   └── run_acceptance.py  ← `make acceptance` (drives izapple2 headless)
