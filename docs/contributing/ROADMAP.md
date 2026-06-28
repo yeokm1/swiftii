@@ -21,7 +21,7 @@ Use the other docs for detail:
 
 ProDOS 2.4.3 is the only target operating system.
 
-Current status: **Phases 0-17 are closed. v1.0.1 is the released version.**
+Current status: **Phases 0-18 are closed. v1.0.1 is the released version.**
 
 ---
 
@@ -498,3 +498,44 @@ Completed:
       four REPL program disks, one data disk, and three Family B compiler
       disks (II+, //e aux, II+ Saturn). v1.0.1 added the //e non-aux
       compiler disk and expanded the release set to nine images.
+
+## Phase 18 - v1.0.1 Patch
+
+Goal: deliver correctness fixes and one hardware addition that were too
+small for a minor-version bump but too important to defer.
+
+Status: **closed**.
+
+Rationale: v1.0.0 shipped without short-circuit evaluation for `&&` and
+`||`, which is a visible correctness gap for Swift programmers. Post-release
+testing found two operational bugs: the on-disk Family B test sweep filled
+the data disk by accumulating `.swb` artifacts, and the SWIFTSAT REPL lost
+its cursor blink after an XLC refactor. The //e non-aux compiler disk was
+also deferred from Phase 17 to reach nine release images.
+
+What shipped:
+
+- Short-circuit `&&` / `||` across all binaries. Implemented in the
+  compiler via `DUP` plus a conditional jump; no new opcode was needed.
+  Covered by new host integration tests, REPL tests, and data-disk logic
+  tests.
+- //e Family B non-aux compiler disk (`swiftii-iie-compiler.po`): firmware
+  80-column output and native lowercase input, no aux-RAM card required.
+  The aux-paged disk was renamed `swiftii-iie-aux-compiler.po`. Release
+  set expands from eight to nine images.
+- On-disk test-sweep disk-full fix. The Family B Runner now deletes the
+  `.swb` it just loaded in TESTRUN mode; normal interactive runs keep the
+  saved `.swb`. Verified 23/0 pass across all four Family B tiers.
+- SWIFTSAT REPL cursor blink restored. The key-wait blink helper was moved
+  through the XLC trampoline so the line editor stays in MAIN and avoids
+  nested bank-restore hazards. `readLine` on SWIFTSAT remains on plain
+  `cgetc` inside the XLC dispatcher to prevent a nested-restore hazard.
+- Identifier-length diagnostic renamed from `"name too long"` to
+  `"name >11 chars"`, making the IDENT_MAX-1 limit explicit. Synced across
+  the compiler, host tests, acceptance harness, data-disk demos, and docs.
+- Dedicated Bool type test suite added (integration file and REPL modes).
+- Nine-disk v1.0.1 release set staged under
+  [`releases/v1.0.1/`](../../releases/v1.0.1/).
+
+Design reference:
+[`021-iie-tier1-nonaux.md`](design/021-iie-tier1-nonaux.md).
