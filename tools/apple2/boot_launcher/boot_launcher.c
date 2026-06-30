@@ -112,6 +112,7 @@ extern uint8_t __fastcall__ a_kbd(void);
 extern void __fastcall__ a_print_hex(uint8_t b);
 extern void __fastcall__ a_probe_saturn(void);
 extern void __fastcall__ a_probe_aux(void);
+extern void __fastcall__ a_unhook_ram(void);
 extern uint8_t __fastcall__ a_mli_open(void);
 extern uint16_t __fastcall__ a_mli_read_startup(void);
 extern void __fastcall__ a_install_and_chain(void);
@@ -2146,6 +2147,14 @@ int main(void) {
     /* --- Detection (writes to g_saturn_slot / g_aux_found) --- */
     a_probe_saturn();
     a_probe_aux();
+
+    /* On a real 64K-aux //e, ProDOS publishes a /RAM volume (slot 3, drive 2)
+     * backed by the SAME aux RAM the //e extras builds claim — SWIFTAUX's
+     * copy-down park and the Family B aux-paged Compiler/Runner. They all chain
+     * through this launcher, so unhook /RAM here, once: it drops the stale
+     * volume from the picker and makes the aux claim explicit. g_aux_found == 1
+     * is exactly the 128K machine that has a /RAM to remove. */
+    if (g_aux_found) a_unhook_ram();
 
     /* Park the detected Saturn slot at SX_SAT_SLOT ($1B04) so it survives the
      * chain (it's below the $2000+ READ). The Tier-2 (Saturn) Family B Compiler

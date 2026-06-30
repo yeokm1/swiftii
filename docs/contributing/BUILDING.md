@@ -222,7 +222,7 @@ make acceptance CONFIGS="iip sat"  # just these configs
 make acceptance ARGS=--dry-run     # print the plan, launch nothing
 make acceptance ARGS=--window      # interactive GUI window (browser): watch + control
 make acceptance ARGS=--show        # live text screen in the terminal instead
-make acceptance RELEASE=releases/v1.0.1  # run pre-built disks, skip the build
+make acceptance RELEASE=releases/v1.0.2  # run pre-built disks, skip the build
 make acceptance-list               # list the configs
 ```
 

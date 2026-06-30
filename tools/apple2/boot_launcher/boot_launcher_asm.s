@@ -22,6 +22,7 @@
 .export _a_print_hex
 .export _a_probe_saturn
 .export _a_probe_aux
+.export _a_unhook_ram
 .export _a_mli_open
 .export _a_mli_read_startup
 .export _a_install_and_chain
@@ -492,6 +493,58 @@ ap_roundtrip:
         jsr     PB_AUXMOVE
         sta     PB_SETSLOT
         lda     PB_DST
+        rts
+
+; ------------------------------------------------------------
+; void a_unhook_ram(void)
+;
+; Remove the ProDOS /RAM disk (slot 3, drive 2) from the on-line
+; device list so it never appears in the volume picker and so the aux
+; RAM the //e extras builds claim is no longer shadowed by a live
+; device. SWIFTAUX (cold-XLC copy-down park) and the Family B aux-paged
+; Compiler/Runner all chain through this launcher, and all reuse the
+; same $0200-$BFFF aux region ProDOS backs /RAM with on a 128K //e — so
+; removing /RAM here, once, covers every aux build.
+;
+; Called from main() only when a_probe_aux confirmed a real 64K aux
+; (g_aux_found = 1); that is exactly the 128K machine that has a /RAM to
+; remove, so no separate MACHID check is needed here.
+;
+; Standard ProDOS 8 removal (Beneath Apple ProDOS 7-9 / Tech Note 21):
+; scan DEVLST for the slot-3/drive-2 device byte $B0 (high nibble $B =
+; drive-2 + slot-3; the book's reinstall routine writes exactly this
+; with LDA #$B0), squish the list down over that entry, and decrement
+; DEVCNT. The $BF00 global page is main RAM, always mapped, so no
+; banking. The book also repoints the slot-3/drive-2 driver vector
+; (DEVADR32) to an "uninstalled device" stub, but that only matters for
+; a direct slot-3/drive-2 access; the volume picker just enumerates
+; DEVLST, so dropping the list entry is sufficient. A cold reboot (the
+; :quit path) reinstates /RAM for the next boot.
+; ------------------------------------------------------------
+RAM_DEVCNT = $BF31              ; ProDOS device count minus 1
+RAM_DEVLST = $BF32              ; ProDOS on-line device list
+
+_a_unhook_ram:
+        ldx     RAM_DEVCNT      ; X = last device index
+ur_find:
+        lda     RAM_DEVLST,x
+        and     #$F0            ; isolate the drive + slot nibble
+        cmp     #$B0            ; $Bx = drive 2 + slot 3 -> /RAM
+        beq     ur_remove
+        dex
+        bpl     ur_find
+        rts                     ; /RAM not present -> nothing to do
+ur_remove:
+        cpx     RAM_DEVCNT
+        beq     ur_done         ; /RAM is the last entry -> just drop it
+ur_shift:
+        lda     RAM_DEVLST+1,x  ; slide the tail of the list down one
+        sta     RAM_DEVLST,x
+        inx
+        cpx     RAM_DEVCNT
+        bne     ur_shift
+ur_done:
+        dec     RAM_DEVCNT
         rts
 
 ; ------------------------------------------------------------

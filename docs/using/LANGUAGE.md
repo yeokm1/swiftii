@@ -22,7 +22,7 @@ Invoked with no arguments:
 
 ```
 ] -SWIFTIIP
-SwiftII ][+ 1.0.1
+SwiftII ][+ 1.0.2
 Type :help :list :quit
 > let name = "Woz"
 > print("Hello, \(name)!")

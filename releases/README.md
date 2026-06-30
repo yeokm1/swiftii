@@ -9,6 +9,7 @@ Images are organised by version, one folder per release:
 releases/
   v1.0.0/   ← the eight .po images for that version
   v1.0.1/   ← the nine .po images for that version
+  v1.0.2/   ← the nine .po images for that version
 ```
 
 `make release` builds the disks and stages them under
@@ -23,8 +24,19 @@ release *Assets*).
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v1.0.2** | 2026-06-30 | Disable the ProDOS `/RAM` disk on 128 K //e |
 | **v1.0.1** | 2026-06-27 | See notes below |
 | **v1.0.0** | 2026-06-25 | Initial public release |
+
+### v1.0.2 — 2026-06-30
+
+- Disable the ProDOS `/RAM` disk on a 128 K //e. On those machines ProDOS
+  publishes a `/RAM` volume backed by the same auxiliary RAM the //e extras
+  builds reuse (SWIFTAUX's copy-down park and the aux-paged Family B
+  compiler/runner). The boot launcher now removes `/RAM` from the on-line
+  device list at startup, so it no longer appears in the volume picker and the
+  aux RAM is no longer shadowed by a live device. Machines without a 64 KB aux
+  card (the II+ and non-aux //e) are unaffected.
 
 ### v1.0.1 — 2026-06-27
 
@@ -53,7 +65,7 @@ release *Assets*).
 ## The nine-disk set
 
 Staged release images carry a `-v<version>` suffix (e.g.
-`swiftii-iip-lite-repl-v1.0.1.po`) so a single `.po` downloaded on its own
+`swiftii-iip-lite-repl-v1.0.2.po`) so a single `.po` downloaded on its own
 from a GitHub Release still names its version. The tables below list the
 canonical stem; append `-v<version>` for the actual filename.
 
@@ -69,10 +81,10 @@ canonical stem; append `-v<version>` for the actual filename.
 | `swiftii-iie-aux-compiler.po` | //e with 64K aux | Family B (Tier 3, aux-paged) |
 | `swiftii-iip-sat-compiler.po` | ][+ Saturn | Family B (Tier 2, Saturn-paged) |
 
-## v1.0.1 disk contents snapshot
+## v1.0.2 disk contents snapshot
 
 Free-space figures are read from the freshly staged `.po` images
-(AppleCommander disk listing), captured 2026-06-27 — `make disks check-readme`
+(AppleCommander disk listing), captured 2026-06-30 — `make disks check-readme`
 verifies each disk's `README.TXT` and launcher banner, not its free bytes, so
 refresh these numbers from the build when the disk contents change. Every
 bootable disk carries `PRODOS`, `SWIFTII.SYSTEM` (launcher), `DEBUG.SYSTEM`, and
@@ -80,15 +92,15 @@ bootable disk carries `PRODOS`, `SWIFTII.SYSTEM` (launcher), `DEBUG.SYSTEM`, and
 
 | Image | Free bytes | Additional root payload |
 |-------|-----------:|-------------------------|
-| `swiftii-iip-lite-repl.po` | 30,208 | `SWIFTIIP.SYSTEM`, `SAMPLES/` |
-| `swiftii-iip-sat-repl.po` | 12,800 | `SWIFTSAT.SYSTEM`, `SAMPLES/`, `XSAMPLES/` (extras staged-source samples only) |
+| `swiftii-iip-lite-repl.po` | 29,696 | `SWIFTIIP.SYSTEM`, `SAMPLES/` |
+| `swiftii-iip-sat-repl.po` | 12,288 | `SWIFTSAT.SYSTEM`, `SAMPLES/`, `XSAMPLES/` (extras staged-source samples only) |
 | `swiftii-iie-lite-repl.po` | 31,232 | `SWIFTIIE.SYSTEM`, `SAMPLES/` |
 | `swiftii-iie-aux-repl.po` | 14,336 | `SWIFTAUX.SYSTEM`, `SAMPLES/`, `XSAMPLES/` (extras staged-source samples only) |
 | `swiftii-data.po` | 19,968 | non-boot data disk: `SAMPLES/`, full `XSAMPLES/`, `TESTS/`, `TESTRUN.SYSTEM` |
-| `swiftii-iip-compiler.po` | 5,632 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
+| `swiftii-iip-compiler.po` | 5,120 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
 | `swiftii-iie-compiler.po` | 8,704 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
 | `swiftii-iie-aux-compiler.po` | 7,168 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
-| `swiftii-iip-sat-compiler.po` | 3,584 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
+| `swiftii-iip-sat-compiler.po` | 3,072 | `COMPILER.SYSTEM`, `RUNNER.SYSTEM`, minimal `SAMPLES/`, `XSAMPLES/XSNAKE.SWIFT` |
 
 Program-disk `SAMPLES/` is the portable set (`arrays`, `fib`, `fizzbuzz`,
 `functions`, `greet`, `optionals`, `strings`) except on compiler disks, where
@@ -134,7 +146,7 @@ commit the new `releases/v<version>/` folder.
 > build), point the harness at this version folder:
 >
 > ```sh
-> make acceptance RELEASE=releases/v1.0.1 ARGS=--window
+> make acceptance RELEASE=releases/v1.0.2 ARGS=--window
 > ```
 >
 > The images are copied into `build/acceptance/` and run from there, so the

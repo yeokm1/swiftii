@@ -546,21 +546,26 @@ $(A2_DIR)/lcobj/%.o: src/%.c
 	cc65 -t apple2 -O -Cl -Or --rodata-name LC $< -o $(@:.o=.s)
 	ca65 -t apple2 $(@:.o=.s) -o $@
 
-# Refresh the REPL banner / boot-launcher `__DATE__` and `__TIME__`
-# macros on the first build of each calendar day, without forcing
-# a rebuild on every make invocation (which would defeat
-# `make run`'s incremental fast-path).
+# Refresh the REPL banner / boot-launcher `__DATE__` / `__TIME__` macros and
+# the baked-in SWIFTII_VERSION string when either the calendar day or the
+# version changes, without forcing a rebuild on every make invocation (which
+# would defeat `make run`'s incremental fast-path).
 #
-# Mechanism: a sentinel file at build/apple2/.last_build_date
-# stores today's YYYYMMDD. A phony `check-build-date` rule runs on
-# every make invocation; it only *writes* to the sentinel when
-# today's date differs from the stored value. So the sentinel's
-# mtime bumps only at day boundaries.
+# Mechanism: a sentinel file at build/apple2/.last_build_date stores
+# "YYYYMMDD <version>". A phony `check-build-date` rule runs on every make
+# invocation; it only *writes* to the sentinel when today's date OR the
+# version (from src/common/version.h) differs from the stored value. So the
+# sentinel's mtime bumps only at a day boundary or a version bump.
 #
 # $(A2_SYSTEM_BIN) / extras / boot launcher then declare $(A2_DATE_STAMP)
-# as a real prereq — Make's normal timestamp comparison rebuilds
-# them iff the sentinel was just bumped (= a new day), and cc65's
-# recompile picks up the fresh `__DATE__` / `__TIME__`.
+# as a real prereq — Make's normal timestamp comparison rebuilds them iff
+# the sentinel was just bumped, and cc65's recompile picks up the fresh
+# `__DATE__` / SWIFTII_VERSION. The version is folded in here (rather than a
+# per-binary version.h prereq) because version.h reaches the binaries through
+# config.h as a header — not a cl65 source-list input — so a plain prereq is
+# easy to forget on a new binary; keying the shared stamp covers them all.
+# Without this, a `make release` after only a version bump re-packs the disks
+# but ships interpreter/launcher binaries with the stale banner.
 #
 # To force a rebuild without changing source, delete the sentinel
 # (rm build/apple2/.last_build_date) and re-run make.
@@ -569,10 +574,10 @@ A2_DATE_STAMP := $(A2_DIR)/.last_build_date
 .PHONY: check-build-date
 check-build-date:
 	@mkdir -p $(A2_DIR)
-	@TODAY=$$(date +%Y%m%d); \
+	@NEW="$$(date +%Y%m%d) $(VERSION)"; \
 	OLD=$$(cat $(A2_DATE_STAMP) 2>/dev/null || echo ""); \
-	if [ "$$TODAY" != "$$OLD" ]; then \
-	  echo "$$TODAY" > $(A2_DATE_STAMP); \
+	if [ "$$NEW" != "$$OLD" ]; then \
+	  echo "$$NEW" > $(A2_DATE_STAMP); \
 	fi
 
 $(A2_DATE_STAMP): check-build-date

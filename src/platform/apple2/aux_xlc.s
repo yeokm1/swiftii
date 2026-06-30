@@ -58,11 +58,16 @@
 ; C-callable entry points:
 ;
 ;   void __fastcall__ aux_init(void)
-;       Reserved init hook (peer to SWIFTSAT's xlc_init); currently a
-;       no-op. The trampoline toggles INTCXROM around its own AUXMOVE
-;       call (see below), so there is no global $Cxxx state to set up
-;       here — and NOT touching CXROM globally keeps slot-card ROM
-;       visible for any later ProDOS/MLI use (file mode).
+;       Reserved init hook (peer to SWIFTSAT's xlc_init), currently a
+;       no-op. There is no global $Cxxx state to set up: the trampoline
+;       toggles INTCXROM around its own AUXMOVE call (see further below),
+;       and NOT touching CXROM globally keeps slot-card ROM visible for
+;       any later ProDOS/MLI use (file mode). The ProDOS /RAM disk that
+;       overlaps SWIFTAUX's aux park is unhooked once, up front, by the
+;       boot launcher (a_unhook_ram in boot_launcher_asm.s) — it is the
+;       sole path that stages the park into aux, and it covers every aux
+;       build (SWIFTAUX + the Family B aux-paged Compiler/Runner) in one
+;       place, before its own volume picker can enumerate /RAM.
 ;
 ;   swiftii_err_t __fastcall__ aux_xlc_call(uint8_t id)
 ;       Generic aux dispatch. Caller pre-stores argc to _xlc_argc
@@ -105,9 +110,18 @@ AUX_PARK_HI = $20                        ; AUX_PARK = $2000 (aux main RAM)
 
 ; ------------------------------------------------------------
 ; void __fastcall__ aux_init(void)
+;
+; Reserved SWIFTAUX init hook (peer to SWIFTSAT's xlc_init), currently a
+; no-op. The ProDOS /RAM disk that overlaps SWIFTAUX's aux park is
+; removed up front by the boot launcher (a_unhook_ram in
+; boot_launcher_asm.s), which is the only path that stages the park into
+; aux and the only code that runs the volume picker that would otherwise
+; show /RAM. Doing it there covers every //e aux build (SWIFTAUX and the
+; Family B aux-paged Compiler/Runner) in one place, so nothing is needed
+; here. Kept as a hook so main.c's WITH_SWIFTAUX call site is stable.
 ; ------------------------------------------------------------
 _aux_init:
-        rts                              ; reserved; trampoline is self-contained
+        rts
 
 ; ------------------------------------------------------------
 ; swiftii_err_t __fastcall__ aux_xlc_call(uint8_t id)

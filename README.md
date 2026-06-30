@@ -7,7 +7,7 @@ SwiftII supports an implementation of `let`/`var`, optionals, type inference, st
 Both a REPL and bytecode compiler/runner setups are provided depending on disk.
 
 ```
-SwiftII //e 1.0.1
+SwiftII //e 1.0.2
 > let result = 40 + 2
 > print("the result is \(result)")
 the result is 42
@@ -20,7 +20,7 @@ the result is 42
 The **//e** has a lowercase keyboard, so you type that as-is. An uppercase-only **][+** has no lowercase and no `\`, so you type the *same* session with digraphs (`??/` is `\`) — SwiftII reads it back as the canonical Swift above. That's exactly what's on the real ][+ screen in the photo below:
 
 ```
-SWIFTII ][+ 1.0.1
+SWIFTII ][+ 1.0.2
 > LET RESULT = 40 + 2
 > PRINT("THE RESULT IS ??/(RESULT)")
 THE RESULT IS 42
@@ -84,7 +84,7 @@ And it runs in **64 KB**: the lite system fits a stock 64 KB Apple II, while the
 
 Download a disk image (`.po`) from the [GitHub Releases](https://github.com/yeokm1/swiftii/releases) assets and open it in an Apple II emulator - **Mariani** on macOS, **AppleWin** on Windows, or [**izapple2**](https://github.com/ivanizag/izapple2/releases) (cross-platform).
 
-Start with `swiftii-iip-lite-repl` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.1.po`) for the basic II+ REPL - it boots straight to the launcher. Pick another disk from the [table below](#on-real-hardware) for graphics, memory access, speaker clicks, sound in compiled programs, or the compiler.
+Start with `swiftii-iip-lite-repl` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.2.po`) for the basic II+ REPL - it boots straight to the launcher. Pick another disk from the [table below](#on-real-hardware) for graphics, memory access, speaker clicks, sound in compiled programs, or the compiler.
 
 Want to build it yourself? See [Build from source](#build-from-source).
 
@@ -104,7 +104,7 @@ The full catalogue is in [`progdisk/README.md`](progdisk/README.md).
 
 ## On real hardware
 
-A SwiftII disk is a standard 140 KB ProDOS 5.25" image. Grab a prebuilt `.po` from the [GitHub Releases](https://github.com/yeokm1/swiftii/releases) assets (or build the set yourself - see [Build from source](#build-from-source)). Write one to a floppy with **ADTPro**, or run it from a **floppy emulator** (BMOW Floppy Emu, CFFA3000). Each disk is `swiftii-….po` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.1.po`); pick the one for your machine:
+A SwiftII disk is a standard 140 KB ProDOS 5.25" image. Grab a prebuilt `.po` from the [GitHub Releases](https://github.com/yeokm1/swiftii/releases) assets (or build the set yourself - see [Build from source](#build-from-source)). Write one to a floppy with **ADTPro**, or run it from a **floppy emulator** (BMOW Floppy Emu, CFFA3000). Each disk is `swiftii-….po` (release assets append the version, e.g. `swiftii-iip-lite-repl-v1.0.2.po`); pick the one for your machine:
 
 | Disk | For | You get |
 |------|-----|---------|

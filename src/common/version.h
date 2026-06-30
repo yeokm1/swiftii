@@ -9,7 +9,7 @@
 #ifndef SWIFTII_VERSION_H
 #define SWIFTII_VERSION_H
 
-#define SWIFTII_VERSION   "1.0.1"
+#define SWIFTII_VERSION   "1.0.2"
 #define SWIFTII_YEAR      "2026"
 #define SWIFTII_COPYRIGHT "Copyright (c) " SWIFTII_YEAR " Yeo Kheng Meng"
 

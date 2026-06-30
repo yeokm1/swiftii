@@ -112,7 +112,7 @@ The REPL ("read-eval-print loop") runs what you type, line by line. The
 prompt is `> `.
 
 ```
-SwiftII ][+ 1.0.1
+SwiftII ][+ 1.0.2
 Type :help :list :quit
 > 1 + 2
 3

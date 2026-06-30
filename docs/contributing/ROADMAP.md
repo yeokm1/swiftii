@@ -21,7 +21,7 @@ Use the other docs for detail:
 
 ProDOS 2.4.3 is the only target operating system.
 
-Current status: **Phases 0-18 are closed. v1.0.1 is the released version.**
+Current status: **Phases 0-19 are closed. v1.0.2 is the released version.**
 
 ---
 
@@ -539,3 +539,38 @@ What shipped:
 
 Design reference:
 [`021-iie-tier1-nonaux.md`](design/021-iie-tier1-nonaux.md).
+
+## Phase 19 - v1.0.2 Patch
+
+Goal: reclaim the auxiliary RAM the //e extras builds use from the ProDOS
+`/RAM` volume that shadows it, removing a stale entry from the launcher's
+volume picker and making the aux claim explicit.
+
+Status: **closed**.
+
+Rationale: on a 128K //e, ProDOS publishes a `/RAM` volume (slot 3, drive 2)
+backed by the same auxiliary RAM (`$0200-$BFFF`) the //e aux extras builds
+reuse for cold XLC bodies and paged bytecode - SWIFTAUX, lite-on-//e, and the
+Family B aux-paged Compiler and Runner. The volume appeared in the launcher's
+volume picker and shadowed memory those builds overwrite. This was the last
+remaining backlog item with a clean prerequisite role for a future //e-aux HGR
+spike, so it is pulled forward as a patch. (Formerly the lowest-priority
+`ROADMAP-MAYBE` entry.)
+
+What shipped:
+
+- `/RAM` is unhooked at the one chokepoint every //e aux build boots through:
+  the boot launcher. A new `a_unhook_ram` routine squishes the slot-3/drive-2
+  device entry out of the ProDOS on-line device list and decrements the device
+  count (standard ProDOS 8 removal). The launcher calls it once the aux probe
+  has confirmed a real 64K aux card, before its own volume picker enumerates
+  devices, so the fix covers SWIFTAUX, lite-on-//e, and both Family B aux tiers
+  in a single place. Machines without a 64K aux card (the II+ and non-aux //e
+  builds) never call it.
+- Emulator-verified on the //e aux REPL disk and the //e aux Family B
+  compiler/runner disk: `/RAM` no longer appears in the volume picker, and the
+  aux-paged compile/run path (including the large-program bytecode canary) is
+  unaffected. The acceptance harness asserts `/RAM` is absent from the //e
+  volume picker so the unhook cannot silently regress.
+- Nine-disk v1.0.2 release set staged under
+  [`releases/v1.0.2/`](../../releases/v1.0.2/).

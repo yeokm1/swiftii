@@ -1368,10 +1368,17 @@ def scen_keyboard(d: Headless, rec: Recorder, out: Path, iie: bool = False):
     stage("File selector -> DISKS / VOLUMES picker")
     d.key(ord(menu_key(d.text(), "FILE") or "2"))
     want("volume-picker", "DISKS")
-    stage("volume picker: I/M move, RET opens the boot volume")
+    stage("volume picker: /RAM unhooked, I/M move, RET opens the boot volume")
+    # /RAM-absent regression guard (ROADMAP Phase 19). On a 128K //e, ProDOS
+    # installs a /RAM volume backed by the aux RAM the extras builds reuse, and
+    # the boot launcher's a_unhook_ram drops it from the on-line device list
+    # before this picker (and any chained DEBUG.SYSTEM) enumerates devices. II+
+    # never has /RAM, so the boot volume is first and the list must omit /RAM on
+    # BOTH machines. (Before the unhook the //e listed /RAM first, which is why
+    # this used to need an extra step-down before opening a volume with files.)
+    rec.check("/RAM" not in d.text().upper(), "volume-picker-no-ram",
+              "/RAM not in the volume picker")
     d.key(ord("M")); d.run(700); d.key(ord("I")); d.run(700)
-    if iie:
-        d.key(ord("M")); d.run(700)   # //e lists /RAM first; step to /PRODOS (has files)
     d.enter(); want("browser", "[E]DIT")
     stage("browser: I/M highlight, J/K preview, Ctrl-T/Ctrl-V page")
     for code in (ord("M"), ord("I"), ord("J"), ord("K"), 20, 22):

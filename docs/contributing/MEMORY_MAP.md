@@ -84,7 +84,7 @@ separate: SWIFTSAT uses the `WITH_EXTRAS`/`WITH_SWIFTSAT` path, while
 SWIFTAUX uses `WITH_SWIFTAUX` plus `WITH_IIE` and aux/80-column flags.
 Per-binary budgets are enforced by `make size` and exercised in `make ci`.
 
-Release snapshot, v1.0.1 rebuilt 2026-06-27 (`make release` + `make size`):
+Release snapshot, v1.0.2 rebuilt 2026-06-30 (`make release` + `make size`):
 
 | Binary / region | Bytes | Headroom | Map notes |
 |-----------------|------:|---------:|-----------|

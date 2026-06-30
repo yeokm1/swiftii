@@ -26,11 +26,12 @@ extern void __fastcall__ xlc_init(uint8_t saturn_slot);
 #endif
 
 #ifdef WITH_SWIFTAUX
-/* aux_init prepares the aux copy-down trampoline.
- * There is no Saturn slot to patch — the XLC park already lives in aux
- * main RAM (staged by the boot launcher's aux loader) and the trampoline
- * uses ROM AUXMOVE. Defined in src/platform/apple2/aux_xlc.s; linked only
- * into SWIFTAUX. */
+/* aux_init is a reserved no-op init hook (peer to SWIFTSAT's xlc_init); the
+ * XLC park lives in aux main RAM staged by the boot launcher's aux loader and
+ * the trampoline uses ROM AUXMOVE, so there is no Saturn slot to patch. The
+ * ProDOS /RAM disk that overlaps that aux park is unhooked by the boot
+ * launcher (a_unhook_ram), which covers every aux build in one place. Defined
+ * in src/platform/apple2/aux_xlc.s; linked only into SWIFTAUX. */
 extern void __fastcall__ aux_init(void);
 #endif
 

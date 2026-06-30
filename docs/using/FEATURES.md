@@ -21,7 +21,7 @@ often the reason it ships on one binary and not another.
 
 ## 1. Binary footprints (disk space)
 
-Exact, from `make size` (snapshot: v1.0.1, 2026-06-27). Budget is the
+Exact, from `make size` (snapshot: v1.0.2, 2026-06-30). Budget is the
 40,704-byte ProDOS ceiling.
 
 | Binary | Target | Bytes | Headroom | On-disk role |
