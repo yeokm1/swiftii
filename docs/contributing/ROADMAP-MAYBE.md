@@ -145,3 +145,14 @@ rationale lives in `LESSONS.md` and the design docs.
     because the parity bridge costs bytes before handler rewrites pay off; the
     measured benefit was cycles, not binary size. Reopen only for a real
     latency or demo-performance problem.
+
+30. **Disable the ProDOS `/RAM` disk on //e aux builds** - Would suppress the
+    ProDOS-created `/RAM` volume on //e systems, since the aux extras and
+    compiler/runner tiers already claim the auxiliary RAM (`$0200-$BFFF` plus
+    the aux LC bank) for cold XLC bodies and paged bytecode - the same region
+    that backs `/RAM`. It is not done because the overlap has not been audited:
+    the builds appear to coexist today, and reclaiming the space cleanly means
+    unhooking the ProDOS RAM-disk driver at boot, which needs emulator
+    verification across //e variants. A potential prerequisite for the //e-aux
+    HGR spike in item 1, since it frees the aux RAM that interpreter relocation
+    would need.
